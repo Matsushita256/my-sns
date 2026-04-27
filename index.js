@@ -73,3 +73,4 @@ app.post('/api/posts', async (req, res) => {
 });
 
 let a = 0;
+let b = 0;
