@@ -1,0 +1,9 @@
+body { font-family: sans-serif; background-color: #f5f8fa; display: flex; justify-content: center; }
+.container { width: 100%; max-width: 600px; background: white; padding: 20px; min-height: 100vh; border: 1px solid #e1e8ed; }
+.post-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+textarea { height: 80px; resize: none; padding: 10px; border: 1px solid #ccd6dd; border-radius: 8px; }
+input { padding: 8px; border: 1px solid #ccd6dd; border-radius: 8px; }
+button { background-color: #1da1f2; color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+.tweet { border-bottom: 1px solid #e1e8ed; padding: 15px 0; }
+.tweet b { color: #14171a; }
+.tweet p { margin: 5px 0 0; color: #657786; }
