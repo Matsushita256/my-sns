@@ -68,31 +68,54 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// 投稿取得API
+// /api/get を書き換え
 app.get("/api/get", async (req, res) => {
     const myId = req.session.userId || 0;
+    const { q } = req.query; // 検索クエリを取得
+
     try {
+        let queryParams = [myId];
+        let whereClause = "";
+
+        // 検索クエリがある場合の処理
+        if (q) {
+            // スペース（全角・半角）で分割して空文字を除外
+            const keywords = q.split(/\s+/).filter(k => k.length > 0);
+            if (keywords.length > 0) {
+                const conditions = keywords.map((k, i) => {
+                    queryParams.push(`%${k}%`); // 部分一致用の % を付与
+                    return `p.content ILIKE $${queryParams.length}`; // ILIKEで大文字小文字無視
+                });
+                whereClause = `AND (${conditions.join(' AND ')})`; // AND検索
+            }
+        }
+
         const query = `
             SELECT 
                 p.id, 
                 u.username, 
                 p.content, 
+                p.created_at,
+                p.user_id = $1 AS is_mine, -- 自分の投稿かどうかの判定を追加[cite: 3]
                 COUNT(l.id) AS like_count,
                 EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) AS is_liked
             FROM posts p
             JOIN users u ON p.user_id = u.id
             LEFT JOIN likes l ON p.id = l.post_id
-            GROUP BY p.id, u.username
+            WHERE 1=1 ${whereClause}
+            GROUP BY p.id, u.username, p.created_at
             ORDER BY p.id DESC
             LIMIT 100;
         `;
-        const result = await pool.query(query, [myId]);
+
+        const result = await pool.query(query, queryParams);
         const rows = result.rows.map(row => ({
             ...row,
             like_count: parseInt(row.like_count)
         }));
         res.json(rows);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: "取得失敗" });
     }
 });
@@ -135,6 +158,30 @@ app.post("/api/like", async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: "操作失敗" });
+    }
+});
+
+// 投稿削除API
+app.delete("/api/post/:id", async (req, res) => {
+    const userId = req.session.userId;
+    const postId = req.params.id;
+
+    if (!userId) return res.status(401).json({ error: "ログインが必要です" });
+
+    try {
+        // 投稿の所有者を確認してから削除する
+        const result = await pool.query(
+            "DELETE FROM posts WHERE id = $1 AND user_id = $2 RETURNING *",
+            [postId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(403).json({ error: "自分の投稿以外は削除できません" });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: "削除失敗" });
     }
 });
 

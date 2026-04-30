@@ -188,3 +188,59 @@ button:hover { opacity: 0.8; }
 .like-btn.liked {
     color: #e0245e;
 }
+
+.search-box {
+    display: flex;
+    gap: 8px;
+}
+
+.search-box input {
+    margin-bottom: 0; /* 検索時はボタンと高さを合わせるため */
+}
+
+.search-box .btn-primary {
+    flex: 0 0 60px;
+    padding: 0;
+    font-size: 13px;
+}
+
+.highlight {
+    background-color: #fff9c4; /* 薄い黄色 */
+    font-weight: bold;
+    padding: 0 2px;
+    border-radius: 4px;
+    color: #333;
+}
+
+.timestamp {
+    font-size: 13px;
+    color: #657786;
+    font-weight: normal;
+    margin-left: 8px;
+}
+
+.tweet-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.tweet-header {
+    display: flex;
+    justify-content: space-between; /* ユーザー名と削除ボタンを両端に */
+    align-items: center;
+}
+
+.delete-btn {
+    background: none;
+    color: #ccd6dd;
+    font-size: 18px;
+    padding: 0 5px;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: rgba(224, 36, 94, 0.1);
+    color: #e0245e;
+}
