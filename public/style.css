@@ -1,9 +1,190 @@
-body { font-family: sans-serif; background-color: #f5f8fa; display: flex; justify-content: center; }
-.container { width: 100%; max-width: 600px; background: white; padding: 20px; min-height: 100vh; border: 1px solid #e1e8ed; }
-.post-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-textarea { height: 80px; resize: none; padding: 10px; border: 1px solid #ccd6dd; border-radius: 8px; }
-input { padding: 8px; border: 1px solid #ccd6dd; border-radius: 8px; }
-button { background-color: #1da1f2; color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-.tweet { border-bottom: 1px solid #e1e8ed; padding: 15px 0; }
-.tweet b { color: #14171a; }
-.tweet p { margin: 5px 0 0; color: #657786; }
+/* 全体の基本設定 */
+body {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    background-color: #e6ecf0; /* 少し青みのあるグレー */
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    display: flex;
+    width: 1000px;
+    max-width: 95vw;
+    gap: 30px;
+    padding-top: 20px;
+}
+
+/* サイドバー（左側） */
+.sidebar {
+    flex: 1;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.app-logo {
+    color: #1da1f2;
+    font-size: 28px;
+    margin: 0 0 10px 10px;
+}
+
+/* メインコンテンツ（右側） */
+.main-content {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* カード共通スタイル */
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* ログイン・入力フォーム */
+h3 { margin-top: 0; color: #333; font-size: 16px; }
+
+input, textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccd6dd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    background-color: #f5f8fa;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #1da1f2;
+    background-color: white;
+}
+
+/* ボタン類 */
+button {
+    cursor: pointer;
+    border: none;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-primary {
+    background-color: #1da1f2;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    flex: 1;
+}
+
+.btn-secondary {
+    background-color: #e1e8ed;
+    color: #555;
+    padding: 10px 15px;
+    border-radius: 20px;
+    flex: 1;
+}
+
+.btn-post {
+    background-color: #1da1f2;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 30px;
+    font-size: 15px;
+}
+
+button:hover { opacity: 0.8; }
+
+/* ログイン状態 */
+.status-text {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background-color: #17bf63;
+    border-radius: 50%;
+}
+
+/* 投稿カード */
+.post-card textarea {
+    height: 100px;
+    resize: none;
+    border: none;
+    font-size: 18px;
+    background-color: white;
+}
+
+.post-footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+/* タイムラインのツイート */
+.tweet {
+    background: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e8ed;
+    transition: background 0.2s;
+}
+
+.tweet:first-child { border-radius: 16px 16px 0 0; }
+.tweet:last-child { border-radius: 0 0 16px 16px; border-bottom: none; }
+
+.tweet-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.username {
+    font-weight: bold;
+    color: #14171a;
+}
+
+.tweet-content {
+    color: #14171a;
+    line-height: 1.5;
+    margin: 5px 0 10px 0;
+}
+
+/* いいねボタン */
+.like-btn {
+    background: none;
+    color: #657786;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 15px;
+}
+
+.like-btn:hover {
+    background-color: rgba(224, 36, 94, 0.1);
+    color: #e0245e;
+}
+
+.like-btn.liked {
+    color: #e0245e;
+}

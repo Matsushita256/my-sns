@@ -1,18 +1,36 @@
 version: '3.8'
+
 services:
-  # データベースサーバーの設定
+  # データベースコンテナ
   db:
     image: postgres:15
-    restart: always
+    container_name: sns-db
     environment:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mysns
+      POSTGRES_DB: sns_db
     ports:
       - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # ここを追加
 
-# データを永続化するための保存領域
+  # アプリケーションコンテナ (新規追加)
+  app:
+    build: .
+    container_name: sns-app
+    ports:
+      - "3000:3000"
+      - "9229:9229" # デバッグ用ポートを追加
+    environment:
+      # DBのホスト名を「localhost」ではなく、サービス名の「db」にする
+      DB_HOST: db
+    depends_on:
+      - db
+    # コードを書き換えたら即座に反映されるように同期（任意）
+    volumes:
+      - .:/app
+      - /app/node_modules
+
 volumes:
-  db-data:
+  pgdata:
