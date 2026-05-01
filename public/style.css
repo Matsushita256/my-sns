@@ -1,246 +1,351 @@
-/* 全体の基本設定 */
+/* モダンなカラーパレットとフォント設定 */
+:root {
+    --primary: #6366f1;         /* インディゴ（アクセント） */
+    --primary-hover: #4f46e5;
+    --bg-main: #f8fafc;        /* 非常に淡いグレー */
+    --bg-card: #ffffff;
+    --text-main: #1e293b;      /* ダークスレート */
+    --text-sub: #64748b;       /* スレートグレー */
+    --border: #e2e8f0;         /* 境界線 */
+    --radius: 12px;            /* 角丸の統一 */
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
 body {
-    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-    background-color: #e6ecf0; /* 少し青みのあるグレー */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
     margin: 0;
+    line-height: 1.5;
+}
+
+.app-wrapper {
     display: flex;
     justify-content: center;
+    padding: 24px 16px;
 }
 
 .container {
     display: flex;
-    width: 1000px;
-    max-width: 95vw;
-    gap: 30px;
-    padding-top: 20px;
+    gap: 24px;
+    width: 100%;
+    max-width: 1100px;
 }
 
-/* サイドバー（左側） */
+/* --- サイドバーのデザイン --- */
 .sidebar {
-    flex: 1;
+    width: 280px;
+}
+
+.sidebar-sticky {
     position: sticky;
-    top: 20px;
-    height: fit-content;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    top: 24px;
 }
 
 .app-logo {
-    color: #1da1f2;
-    font-size: 28px;
-    margin: 0 0 10px 10px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 24px;
+    letter-spacing: -0.025em;
 }
 
-/* メインコンテンツ（右側） */
-.main-content {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* カード共通スタイル */
 .card {
-    background: white;
-    border-radius: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
 }
 
-/* ログイン・入力フォーム */
-h3 { margin-top: 0; color: #333; font-size: 16px; }
-
-input, textarea {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #ccd6dd;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-    font-size: 14px;
-    background-color: #f5f8fa;
+.card h3, .card h4 {
+    margin-top: 0;
+    font-size: 15px;
+    color: var(--text-main);
 }
 
-input:focus, textarea:focus {
-    outline: none;
-    border-color: #1da1f2;
-    background-color: white;
-}
-
-/* ボタン類 */
-button {
-    cursor: pointer;
-    border: none;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.auth-buttons {
+/* 検索窓をsqlab風のスリムなデザインに */
+/* 検索バー全体の微調整 */
+.search-bar {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    background: var(--bg-card);
+    border: 2px solid var(--border); /* 少し太くして存在感を出す */
+    border-radius: 8px;
+    padding: 2px;
+    transition: border-color 0.2s;
 }
 
-.btn-primary {
-    background-color: #1da1f2;
+.search-bar:focus-within {
+    border-color: var(--primary); /* 入力中に枠線の色を変える */
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 12px;
+    outline: none;
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.btn-search {
+    background-color: var(--primary);
     color: white;
-    padding: 10px 15px;
-    border-radius: 20px;
-    flex: 1;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-right: 2px; /* 枠線との微調整 */
+    display: flex; /* 追加 */
+    align-items: center; /* 追加 */
+    justify-content: center; /* 追加 */
+    padding: 6px; /* 調整（文字がなくなった分） */
 }
 
-.btn-secondary {
-    background-color: #e1e8ed;
-    color: #555;
-    padding: 10px 15px;
-    border-radius: 20px;
+.btn-search:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-search:active {
+    transform: translateY(1px); /* 押した感を出す */
+}
+
+.search-section {
+    margin-bottom: 15px;
+}
+
+/* ログイン入力欄 */
+
+/* .auth-box card {
+    margin-top: 10px;
+} */
+
+.auth-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.auth-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-login, .btn-reg {
     flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+}
+
+.btn-login { background: var(--primary); color: white; border: none; }
+.btn-reg { background: white; color: var(--text-main); }
+
+/* --- メインコンテンツ --- */
+.main-content {
+    flex: 1;
+    max-width: 680px;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+/* --- 投稿エリア（sqlab/モダンUI風） --- */
+.compose-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+}
+
+.compose-main {
+    display: flex;
+    gap: 12px;
+}
+
+textarea {
+    width: 100%;
+    border: none;
+    resize: none;
+    font-size: 16px;
+    padding: 8px 0;
+    outline: none;
+    min-height: 24px; /* 1行分 */
+    color: var(--text-main);
+}
+
+.compose-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
 }
 
 .btn-post {
-    background-color: #1da1f2;
+    background-color: var(--primary);
     color: white;
-    padding: 10px 25px;
-    border-radius: 30px;
-    font-size: 15px;
-}
-
-button:hover { opacity: 0.8; }
-
-/* ログイン状態 */
-.status-text {
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: bold;
-    color: #555;
-}
-
-.dot {
-    width: 10px;
-    height: 10px;
-    background-color: #17bf63;
-    border-radius: 50%;
-}
-
-/* 投稿カード */
-.post-card textarea {
-    height: 100px;
-    resize: none;
     border: none;
-    font-size: 18px;
-    background-color: white;
-}
-
-.post-footer {
-    display: flex;
-    justify-content: flex-end;
-    border-top: 1px solid #eee;
-    padding-top: 10px;
-}
-
-/* タイムラインのツイート */
-.tweet {
-    background: white;
-    padding: 15px 20px;
-    border-bottom: 1px solid #e1e8ed;
+    padding: 6px 16px; /* 小さめのボタン */
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
     transition: background 0.2s;
 }
 
-.tweet:first-child { border-radius: 16px 16px 0 0; }
-.tweet:last-child { border-radius: 0 0 16px 16px; border-bottom: none; }
+.btn-post:hover:not(:disabled) { background-color: var(--primary-hover); }
+.btn-post:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* --- タイムライン（カード形式） --- */
+.tweet {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 16px;
+    transition: transform 0.1s;
+    box-shadow: var(--shadow);
+}
+
+.tweet:hover {
+    border-color: var(--primary);
+}
+
+.avatar {
+    width: 44px;
+    height: 44px;
+    background: #e2e8f0;
+    border-radius: 8px; /* 四角めの丸角 */
+    flex-shrink: 0;
+}
+
+.tweet-body { flex: 1; }
 
 .tweet-header {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 5px;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
 .username {
-    font-weight: bold;
-    color: #14171a;
-}
-
-.tweet-content {
-    color: #14171a;
-    line-height: 1.5;
-    margin: 5px 0 10px 0;
-}
-
-/* いいねボタン */
-.like-btn {
-    background: none;
-    color: #657786;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 15px;
-}
-
-.like-btn:hover {
-    background-color: rgba(224, 36, 94, 0.1);
-    color: #e0245e;
-}
-
-.like-btn.liked {
-    color: #e0245e;
-}
-
-.search-box {
-    display: flex;
-    gap: 8px;
-}
-
-.search-box input {
-    margin-bottom: 0; /* 検索時はボタンと高さを合わせるため */
-}
-
-.search-box .btn-primary {
-    flex: 0 0 60px;
-    padding: 0;
-    font-size: 13px;
-}
-
-.highlight {
-    background-color: #fff9c4; /* 薄い黄色 */
-    font-weight: bold;
-    padding: 0 2px;
-    border-radius: 4px;
-    color: #333;
+    font-weight: 700;
+    color: var(--text-main);
 }
 
 .timestamp {
+    color: var(--text-sub);
     font-size: 13px;
-    color: #657786;
-    font-weight: normal;
-    margin-left: 8px;
 }
 
-.tweet-header {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+.tweet-content {
+    font-size: 15px;
+    color: var(--text-main);
+    white-space: pre-wrap; /* 改行を維持 */
 }
 
-.tweet-header {
+/* ハイライト表示 */
+.highlight {
+    background-color: #fef08a; /* 黄色 */
+    color: #854d0e;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* 投稿本文といいねボタンの間の距離を広げる */
+.tweet-actions {
+    margin-top: 24px;       /* 12pxや16pxから24px〜30px程度に増やすと、ゆとりが出ます */
     display: flex;
-    justify-content: space-between; /* ユーザー名と削除ボタンを両端に */
     align-items: center;
+    gap: 20px;              /* 他のアクションが増えた時のための余白 */
+    border-top: 1px solid var(--border); /* Xのように細い線を入れると、より「下部」という境界がはっきりします */
+    padding-top: 4px;       /* 線を入れた場合のボタンとの距離 */
+}
+
+/* いいねボタンの親コンテナを透明化 */
+.like-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;               /* ハートと数字の距離を少し詰める */
+    background: none;        /* 背景をなくす */
+    border: none;           /* 枠線もなくす */
+    padding: 8px;           /* クリック領域を確保 */
+    border-radius: 9999px;  /* ホバー時用の円形 */
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-sub);
+    position: relative;
+}
+
+/* ハートアイコンをさらにコンパクトに */
+.heart-icon {
+    width: 18px;            /* 16px〜18pxがXに近いサイズ感です */
+    height: 18px;
+    display: block;
+    stroke-width: 12;       /* パスが大きめなので、線は少し太めが綺麗です */
+}
+
+/* ホバー時のエフェクト（X風の薄い赤背景） */
+.like-btn:hover {
+    color: #f91880;
+    background-color: rgba(249, 24, 128, 0.1); /* ほんのり赤い背景 */
+}
+
+/* いいね済みの状態 */
+.like-btn.liked {
+    color: #f91880;         /* Xのブランドカラーに近いピンクレッド */
+}
+
+.like-btn.liked .heart-icon {
+    fill: #f91880;          /* 中を塗りつぶす */
+    stroke: #f91880;
 }
 
 .delete-btn {
+    border: none;
     background: none;
-    color: #ccd6dd;
+    color: var(--text-sub);
+    cursor: pointer;
     font-size: 18px;
-    padding: 0 5px;
-    border-radius: 50%;
-    transition: 0.2s;
 }
 
-.delete-btn:hover {
-    background-color: rgba(224, 36, 94, 0.1);
-    color: #e0245e;
+.delete-btn:hover { color: #ef4444; }
+
+/* 文字数カウンター */
+.char-count {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-right: 12px;
+    font-family: monospace; /* 数字の幅を一定にしてガタつきを防止 */
+}
+
+.char-count.warning {
+    color: #f59e0b; /* 上限に近い時はオレンジ */
+    font-weight: bold;
+}
+
+/* 600文字を完全に超えた場合（万が一JSの制限を抜けた際など） */
+.char-count.danger {
+    color: #ef4444; /* 超過時は赤 */
 }

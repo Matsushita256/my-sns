@@ -25,6 +25,19 @@ const pool = new Pool({
 // 新規登録API
 app.post("/api/register", async (req, res) => {
     const { username, password } = req.body;
+
+    // ユーザー名：3〜15文字、英数字とアンダースコアのみ許可
+    const usernameRegex = /^[a-zA-Z0-9_]{3,15}$/;
+    if (!usernameRegex.test(username)) {
+        return res.status(400).json({ error: "ユーザー名は3〜15文字の英数字のみ有効です" });
+    }
+
+    // パスワード：8文字以上
+    if (!password || password.length < 8) {
+        return res.status(400).json({ error: "パスワードは8文字以上にしてください" });
+    }
+
+    const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "名前とパスワードが必要です" });
 
     try {
@@ -120,20 +133,45 @@ app.get("/api/get", async (req, res) => {
     }
 });
 
-// 投稿保存API
+// 投稿APIの修正
 app.post("/api/post", async (req, res) => {
-    const userId = req.session.userId;
     const { content } = req.body;
-    if (!userId) return res.status(401).json({ error: "ログインしてください" });
+    const userId = req.session.userId;
+
+    if (!userId) return res.status(401).json({ error: "ログインが必要です" });
+
+    // バリデーション（空・文字数）
+    if (!content || content.trim().length === 0) return res.status(400).json({ error: "投稿内容が空です" });
+    if (content.length > 600) return res.status(400).json({ error: "投稿は600文字以内です" });
 
     try {
-        await pool.query(
-            "INSERT INTO posts (user_id, content) VALUES ($1, $2)",
-            [userId, content]
+        // --- 連投制限チェック ---
+        // 最新の投稿時間を取得
+        const lastPostResult = await pool.query(
+            "SELECT created_at FROM posts WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1",
+            [userId]
         );
-        res.status(201).json({ success: true });
+
+        if (lastPostResult.rows.length > 0) {
+            const lastPostTime = new Date(lastPostResult.rows[0].created_at);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - lastPostTime) / 1000);
+
+            const LIMIT_SECONDS = 10; // 制限時間（秒）
+            if (diffInSeconds < LIMIT_SECONDS) {
+                const waitTime = LIMIT_SECONDS - diffInSeconds;
+                return res.status(429).json({ // 429 Too Many Requests
+                    error: `連投制限中です。あと ${waitTime} 秒待ってください` 
+                });
+            }
+        }
+
+        // 保存処理
+        await pool.query("INSERT INTO posts (user_id, content) VALUES ($1, $2)", [userId, content]);
+        res.json({ success: true });
     } catch (err) {
-        res.status(500).json({ error: "保存失敗" });
+        console.error(err);
+        res.status(500).json({ error: "投稿失敗" });
     }
 });
 
@@ -187,4 +225,30 @@ app.delete("/api/post/:id", async (req, res) => {
 
 app.listen(port, () => {
     console.log(`SNSサーバー起動中: http://localhost:${port}`);
+});
+
+// 投稿入力の監視
+const textarea = document.getElementById('content');
+const charCount = document.getElementById('char-count');
+const postBtn = document.getElementById('post-button');
+
+textarea.addEventListener('input', () => {
+    const length = textarea.value.length;
+    const remaining = 140 - length;
+    
+    charCount.textContent = remaining;
+    
+    // 残り文字数が少なくなったら赤くする
+    if (remaining <= 20) {
+        charCount.classList.add('warning');
+    } else {
+        charCount.classList.remove('warning');
+    }
+
+    // ボタンの有効・無効切り替え
+    postBtn.disabled = length === 0 || length > 140;
+
+    // 自動リサイズ
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
 });

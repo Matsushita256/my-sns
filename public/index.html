@@ -5,51 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAN SNS</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts でフォントを美しく -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar">
-            <h1 class="app-logo">LAN SNS</h1>
-            
-            <div id="search-area" class="card">
-            <h3>投稿を検索</h3>
-                <div class="search-box">
-                    <input type="text" id="search-input" placeholder="キーワードを入力...">
-                    <button onclick="performSearch()" class="btn-primary">検索</button>
-                </div>
-            </div>
+    <div class="app-wrapper">
+        <div class="container">
+            <!-- 左側：ナビゲーションサイドバー -->
+            <aside class="sidebar">
+                <div class="sidebar-sticky">
+                    <h1 class="app-logo">LAN SNS</h1>
+                    
+                    <div class="search-section">
+                        <div class="search-bar">
+                            <input type="text" id="search-input" placeholder="検索">
+                            <button onclick="performSearch()" class="btn-search">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
 
-            <div id="login-area" class="card">
-                <h3>ログイン / 登録</h3>
-                <input type="text" id="login-username" placeholder="ユーザー名">
-                <input type="password" id="login-password" placeholder="パスワード">
-                <div class="auth-buttons">
-                    <button onclick="login()" class="btn-primary">ログイン</button>
-                    <button onclick="register()" class="btn-secondary">新規登録</button>
-                </div>
-            </div>
+                    <div id="login-area" class="auth-box card">
+                        <h4>アカウント</h4>
+                        <input type="text" id="login-username" placeholder="ユーザー名">
+                        <input type="password" id="login-password" placeholder="パスワード">
+                        <div class="auth-actions">
+                            <button onclick="login()" class="btn-login">ログイン</button>
+                            <button onclick="register()" class="btn-reg">登録</button>
+                        </div>
+                    </div>
 
-            <div id="status-area" class="card">
-                <p class="status-text">
-                    <span class="dot"></span>
-                    <span id="display-username">未ログイン</span>
-                </p>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <div id="post-area" class="card post-card">
-                <textarea id="content" placeholder="いまどうしてる？"></textarea>
-                <div class="post-footer">
-                    <button onclick="submitPost()" class="btn-post">投稿する</button>
+                    <div id="status-area" class="profile-box card">
+                        <div class="profile-info">
+                            <div class="avatar"></div>
+                            <div>
+                                <div id="display-username" class="user-name">未ログイン</div>
+                                <div class="user-handle">@Guest</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </aside>
 
-            <div id="timeline">
+            <!-- 右側：タイムライン -->
+            <main class="main-content">
+                <div class="page-title">ホーム</div>
+                
+                <!-- 投稿エリア -->
+                <div id="post-area" class="compose-box">
+                    <div class="compose-main">
+                        <div class="avatar small"></div>
+                        <textarea id="content" placeholder="いまどうしてる？" rows="1"></textarea>
+                    </div>
+                    <div class="compose-footer">
+                        <span id="char-count" class="char-count">0 / 600</span>
+                        <button onclick="submitPost()" id="post-button" class="btn-post" disabled>ポストする</button>
+                    </div>
                 </div>
-        </main>
+
+                <div id="timeline"></div>
+            </main>
+        </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>

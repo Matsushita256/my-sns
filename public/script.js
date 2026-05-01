@@ -8,8 +8,18 @@ window.onload = () => {
 
 // 新規登録機能
 async function register() {
-    const username = document.getElementById('login-username').value;
+    const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value;
+
+    if (username.length < 3) {
+        alert('ユーザー名は3文字以上で入力してください');
+        return;
+    }
+    if (password.length < 8) {
+        alert('パスワードは8文字以上にしてください');
+        return;
+    }
+
     if (!username || !password) return alert('名前とパスワードを入力してください');
 
     const response = await fetch('/api/register', {
@@ -47,86 +57,41 @@ async function login() {
     }
 }
 
-// タイムライン取得
-async function loadTimeline() {
-    const response = await fetch('/api/get');
-    if (response.status === 401) return;
-
-    const posts = await response.json();
-    const timeline = document.getElementById('timeline');
-    timeline.innerHTML = '';
-
-    await drawTimeline(posts, null);
-}
-
 async function performSearch() {
     const query = document.getElementById('search-input').value;
     loadTimeline(query); // 検索ワードを渡して再読み込み
 }
 
-async function drawTimeline(posts, searchQuery) {
-    posts.forEach(post => {
-        const tweetDiv = document.createElement('div');
-        tweetDiv.className = 'tweet';
-        
-        const heartIcon = post.is_liked ? '❤️' : '🤍';
-        const activeClass = post.is_liked ? 'liked' : '';
-        
-        // 時間とハイライトを適用
-        const relativeTime = getRelativeTime(post.created_at);
-        const displayContent = highlightText(post.content, searchQuery);
-
-        const deleteButton = post.is_mine 
-            ? `<button onclick="deletePost(${post.id})" class="delete-btn" title="削除">×</button>` 
-            : '';
-
-        tweetDiv.innerHTML = `
-            <div class="tweet-header">
-                <div>
-                    <span class="username">@${post.username}</span>
-                    <span class="timestamp">${relativeTime}</span>
-                </div>
-                ${deleteButton}
-            </div>
-            <div class="tweet-content">${displayContent}</div>
-            <div class="tweet-actions">
-                <button onclick="toggleLike(${post.id})" class="like-btn ${activeClass}">
-                    ${heartIcon} ${post.like_count}
-                </button>
-            </div>
-        `;
-        timeline.appendChild(tweetDiv);
-    });
-}
-
-async function loadTimeline(searchQuery = '') {
-    // クエリパラメータとして検索ワードを付与[cite: 7]
-    const response = await fetch(`/api/get?q=${encodeURIComponent(searchQuery)}`);
-    if (response.status === 401) return;
-
-    const posts = await response.json();
-    const timeline = document.getElementById('timeline');
-    timeline.innerHTML = '';
-
-    await drawTimeline(posts, searchQuery);
-}
-
 // 投稿送信
 async function submitPost() {
     const content = document.getElementById('content').value;
-    if (!content) return alert('内容を入力してください');
+    const postBtn = document.getElementById('post-button');
 
-    const response = await fetch('/api/post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
-    });
+    // 送信中はボタンを無効化して多重送信を防ぐ
+    postBtn.disabled = true;
 
-    if (response.ok) {
-        document.getElementById('content').value = '';
-        loadTimeline();
-    } else {
-        alert('投稿に失敗しました。ログイン状態を確認してください。');
+    try {
+        const response = await fetch("/api/post", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            document.getElementById('content').value = '';
+            document.getElementById('content').style.height = 'auto'; // 高さをリセット
+            document.getElementById('char-count').textContent = '0 / 600';
+            loadTimeline();
+        } else {
+            // 連投制限やバリデーションエラーの表示
+            alert(data.error);
+        }
+    } catch (err) {
+        alert("通信エラーが発生しました");
+    } finally {
+        postBtn.disabled = false;
     }
 }
 
@@ -163,7 +128,7 @@ function getRelativeTime(dateString) {
 // --- 追加：検索語をハイライトする関数 ---
 function highlightText(text, searchQuery) {
     if (!searchQuery) return text;
-    
+
     // スペースで区切って各キーワードを抽出
     const keywords = searchQuery.split(/\s+/).filter(k => k.length > 0);
     let highlightedText = text;
@@ -191,4 +156,88 @@ async function deletePost(postId) {
         const data = await response.json();
         alert('削除できませんでした: ' + data.error);
     }
+}
+
+// テキストエリアの自動リサイズ設定
+const textarea = document.getElementById('content');
+const charCount = document.getElementById('char-count');
+const postBtn = document.getElementById('post-button');
+
+textarea.addEventListener('input', () => {
+    // 高さを一度リセットして内容に合わせる
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+
+    // 文字があればボタンを有効化
+    postBtn.disabled = textarea.value.trim().length === 0;
+});
+
+// loadTimeline関数内の描画部分
+function renderTweet(post, searchQuery) {
+    const relativeTime = getRelativeTime(post.created_at);
+    const displayContent = highlightText(post.content, searchQuery);
+    const heartIcon = post.is_liked ? '❤️' : '🤍';
+
+    return `
+        <div class="tweet">
+            <div class="avatar"></div>
+            <div class="tweet-body">
+                <div class="tweet-header">
+                    <div>
+                        <span class="username">${post.username}</span>
+                        <span class="timestamp">· ${relativeTime}</span>
+                    </div>
+                    ${post.is_mine ? `<button onclick="deletePost(${post.id})" class="delete-btn">×</button>` : ''}
+                </div>
+                <div class="tweet-content">${displayContent}</div>
+                <div class="tweet-actions">
+                    <button onclick="toggleLike(${post.id})" class="like-btn ${post.is_liked ? 'liked' : ''}">
+                        <span>
+                            <svg class="heart-icon" viewBox="70 80 160 140" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M150.08,112.44c5.41-17.37,20.84-25.73,35.92-25.73c18.03,0,31.79,15.08,31.79,33.26
+		                        c0,21.96-11.96,38.18-24.25,53.09c-11.8,14.26-43.46,40.23-43.46,40.23h-0.33c0,0-31.5-25.97-43.29-40.23
+		                        c-12.29-14.91-24.25-31.13-24.25-53.09c0-18.52,14.26-33.26,31.95-33.26c14.91,0,30.18,8.36,35.59,25.73H150.08z"></path>
+                            </svg>
+                        </span>
+                        <span>${post.like_count}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function loadTimeline(searchQuery = '') {
+    const response = await fetch(`/api/get?q=${encodeURIComponent(searchQuery)}`);
+    if (response.status === 401) return;
+
+    const posts = await response.json();
+    const timeline = document.getElementById('timeline');
+    timeline.innerHTML = posts.map(post => renderTweet(post, searchQuery)).join('');
+}
+
+textarea.addEventListener('input', inputChanged);
+
+function inputChanged() {
+    const length = textarea.value.length;
+    const maxLength = 600;
+
+    // 表示を「現在文字数 / 最大文字数」に更新
+    charCount.textContent = `${length} / ${maxLength}`;
+
+    // 最大文字数を超えた時の警告表示
+
+    charCount.classList.remove('warning');
+    charCount.classList.remove('danger');
+    if (length > maxLength) {
+        charCount.classList.add('danger');
+    } else if (length >= maxLength * 0.9) {
+        charCount.classList.add('warning');
+    }
+    // ボタンの有効・無効切り替え（空または600文字超えで無効化）
+    postBtn.disabled = length === 0 || length > maxLength;
+
+    // 自動リサイズ
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
 }
