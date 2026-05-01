@@ -37,7 +37,6 @@ app.post("/api/register", async (req, res) => {
         return res.status(400).json({ error: "パスワードは8文字以上にしてください" });
     }
 
-    const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "名前とパスワードが必要です" });
 
     try {
@@ -81,51 +80,55 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// /api/get を書き換え
 app.get("/api/get", async (req, res) => {
     const myId = req.session.userId || 0;
     const { q } = req.query; // 検索クエリを取得
 
     try {
-        let queryParams = [myId];
+        let queryParams = [myId]; // $1 は常に自分のID
         let whereClause = "";
 
-        // 検索クエリがある場合の処理
+        // 検索クエリがある場合の処理[cite: 4]
         if (q) {
             // スペース（全角・半角）で分割して空文字を除外
             const keywords = q.split(/\s+/).filter(k => k.length > 0);
             if (keywords.length > 0) {
-                const conditions = keywords.map((k, i) => {
-                    queryParams.push(`%${k}%`); // 部分一致用の % を付与
+                const conditions = keywords.map((k) => {
+                    queryParams.push(`%${k}%`); // $2, $3... とパラメータを追加
                     return `p.content ILIKE $${queryParams.length}`; // ILIKEで大文字小文字無視
                 });
-                whereClause = `AND (${conditions.join(' AND ')})`; // AND検索
+                // 作成された条件を AND で結合
+                whereClause = `AND (${conditions.join(' AND ')})`;
             }
         }
 
+        // クエリ文字列の作成
+        // WHERE 1=1 ${whereClause} を使うことで、動的な検索条件を統合します
         const query = `
             SELECT 
-                p.id, 
-                u.username, 
-                p.content, 
-                p.created_at,
-                p.user_id = $1 AS is_mine, -- 自分の投稿かどうかの判定を追加[cite: 3]
-                COUNT(l.id) AS like_count,
-                EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) AS is_liked
+                p.*, 
+                u.username,
+                (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS like_count,
+                (SELECT COUNT(*) FROM dislikes d WHERE d.post_id = p.id) AS dislike_count,
+                EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = $1) AS is_liked,
+                EXISTS(SELECT 1 FROM dislikes d WHERE d.post_id = p.id AND d.user_id = $1) AS is_disliked,
+                (p.user_id = $1) AS is_mine
             FROM posts p
             JOIN users u ON p.user_id = u.id
-            LEFT JOIN likes l ON p.id = l.post_id
             WHERE 1=1 ${whereClause}
-            GROUP BY p.id, u.username, p.created_at
-            ORDER BY p.id DESC
+            ORDER BY p.created_at DESC
             LIMIT 100;
         `;
 
         const result = await pool.query(query, queryParams);
+        
+        // カウント値は PostgreSQL から文字列で返ってくるため、数値に変換してクライアントに返します[cite: 4]
         const rows = result.rows.map(row => ({
             ...row,
-            like_count: parseInt(row.like_count)
+            like_count: parseInt(row.like_count) || 0,
+            dislike_count: parseInt(row.dislike_count) || 0
         }));
+        
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -223,32 +226,35 @@ app.delete("/api/post/:id", async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`SNSサーバー起動中: http://localhost:${port}`);
+// 低評価のトグル処理
+app.post("/api/dislike", async (req, res) => {
+    const { post_id } = req.body;
+    const userId = req.session.userId;
+
+    if (!userId) return res.status(401).json({ error: "ログインが必要です" });
+
+    try {
+        // 既存の低評価があるか確認
+        const check = await pool.query(
+            "SELECT id FROM dislikes WHERE user_id = $1 AND post_id = $2",
+            [userId, post_id]
+        );
+
+        if (check.rows.length > 0) {
+            // すでに低評価済みなら削除（取り消し）
+            await pool.query("DELETE FROM dislikes WHERE user_id = $1 AND post_id = $2", [userId, post_id]);
+            res.json({ success: true, action: "un-disliked" });
+        } else {
+            // 低評価がなければ追加
+            await pool.query("INSERT INTO dislikes (user_id, post_id) VALUES ($1, $2)", [userId, post_id]);
+            res.json({ success: true, action: "disliked" });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "低評価の処理に失敗しました" });
+    }
 });
 
-// 投稿入力の監視
-const textarea = document.getElementById('content');
-const charCount = document.getElementById('char-count');
-const postBtn = document.getElementById('post-button');
-
-textarea.addEventListener('input', () => {
-    const length = textarea.value.length;
-    const remaining = 140 - length;
-    
-    charCount.textContent = remaining;
-    
-    // 残り文字数が少なくなったら赤くする
-    if (remaining <= 20) {
-        charCount.classList.add('warning');
-    } else {
-        charCount.classList.remove('warning');
-    }
-
-    // ボタンの有効・無効切り替え
-    postBtn.disabled = length === 0 || length > 140;
-
-    // 自動リサイズ
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
+app.listen(port, () => {
+    console.log(`SNSサーバー起動中: http://localhost:${port}`);
 });

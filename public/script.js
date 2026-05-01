@@ -172,11 +172,14 @@ textarea.addEventListener('input', () => {
     postBtn.disabled = textarea.value.trim().length === 0;
 });
 
-// loadTimeline関数内の描画部分
+// renderTweet関数内、tweet-actionsの部分を修正[cite: 2]
 function renderTweet(post, searchQuery) {
     const relativeTime = getRelativeTime(post.created_at);
     const displayContent = highlightText(post.content, searchQuery);
-    const heartIcon = post.is_liked ? '❤️' : '🤍';
+    
+    // アイコンの状態判定
+    const heartIcon = post.is_liked ? 'liked' : '';
+    const dislikeIcon = post.is_disliked ? 'disliked' : '';
 
     return `
         <div class="tweet">
@@ -191,20 +194,43 @@ function renderTweet(post, searchQuery) {
                 </div>
                 <div class="tweet-content">${displayContent}</div>
                 <div class="tweet-actions">
-                    <button onclick="toggleLike(${post.id})" class="like-btn ${post.is_liked ? 'liked' : ''}">
-                        <span>
-                            <svg class="heart-icon" viewBox="70 80 160 140" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M150.08,112.44c5.41-17.37,20.84-25.73,35.92-25.73c18.03,0,31.79,15.08,31.79,33.26
-		                        c0,21.96-11.96,38.18-24.25,53.09c-11.8,14.26-43.46,40.23-43.46,40.23h-0.33c0,0-31.5-25.97-43.29-40.23
-		                        c-12.29-14.91-24.25-31.13-24.25-53.09c0-18.52,14.26-33.26,31.95-33.26c14.91,0,30.18,8.36,35.59,25.73H150.08z"></path>
-                            </svg>
-                        </span>
-                        <span>${post.like_count}</span>
+                    <!-- いいねボタン -->
+                    <button onclick="toggleLike(${post.id})" class="like-btn ${heartIcon}">
+                        <svg class="heart-icon" viewBox="70 80 160 140" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M150.08,112.44c5.41-17.37,20.84-25.73,35.92-25.73c18.03,0,31.79,15.08,31.79,33.26
+                            c0,21.96-11.96,38.18-24.25,53.09c-11.8,14.26-43.46,40.23-43.46,40.23h-0.33c0,0-31.5-25.97-43.29-40.23
+                            c-12.29-14.91-24.25-31.13-24.25-53.09c0-18.52,14.26-33.26,31.95-33.26c14.91,0,30.18,8.36,35.59,25.73H150.08z"></path>
+                        </svg>
+                        <span>${post.like_count || 0}</span>
+                    </button>
+
+                    <!-- 低評価ボタン（追加） -->
+                    <button onclick="toggleDislike(${post.id})" class="dislike-btn ${dislikeIcon}">
+                        <svg class="dislike-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7 10l5 5 5-5"></path>
+                            <path d="M12 15V3"></path>
+                        </svg>
+                        <span>${post.dislike_count || 0}</span>
                     </button>
                 </div>
             </div>
         </div>
     `;
+}
+
+// 低評価トグル関数を追加[cite: 2]
+async function toggleDislike(postId) {
+    const response = await fetch('/api/dislike', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: postId })
+    });
+
+    if (response.ok) {
+        loadTimeline();
+    } else if (response.status === 401) {
+        alert('ログインしてください');
+    }
 }
 
 async function loadTimeline(searchQuery = '') {

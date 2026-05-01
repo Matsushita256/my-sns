@@ -19,12 +19,6 @@ body {
     line-height: 1.5;
 }
 
-.app-wrapper {
-    display: flex;
-    justify-content: center;
-    padding: 24px 16px;
-}
-
 .container {
     display: flex;
     gap: 24px;
@@ -119,12 +113,6 @@ body {
     margin-bottom: 15px;
 }
 
-/* ログイン入力欄 */
-
-/* .auth-box card {
-    margin-top: 10px;
-} */
-
 .auth-box input {
     width: 100%;
     padding: 10px;
@@ -150,12 +138,6 @@ body {
 
 .btn-login { background: var(--primary); color: white; border: none; }
 .btn-reg { background: white; color: var(--text-main); }
-
-/* --- メインコンテンツ --- */
-.main-content {
-    flex: 1;
-    max-width: 680px;
-}
 
 .page-title {
     font-size: 20px;
@@ -189,19 +171,19 @@ textarea {
     color: var(--text-main);
 }
 
-.compose-footer {
+/* .compose-footer {
     display: flex;
     justify-content: flex-end;
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid var(--border);
-}
+} */
 
 .btn-post {
     background-color: var(--primary);
     color: white;
     border: none;
-    padding: 6px 16px; /* 小さめのボタン */
+    padding: 4px 16px; /* 小さめのボタン */
     border-radius: 6px;
     font-weight: 600;
     font-size: 14px;
@@ -243,6 +225,7 @@ textarea {
 .tweet-header {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start; /* ユーザー名と削除ボタンの上端を揃える */
     margin-bottom: 8px;
 }
 
@@ -322,23 +305,36 @@ textarea {
     stroke: #f91880;
 }
 
+/* 削除ボタンのベーススタイル */
 .delete-btn {
     border: none;
     background: none;
     color: var(--text-sub);
     cursor: pointer;
     font-size: 18px;
+    width: 28px;           /* クリック領域を確保 */
+    height: 28px;          /* クリック領域を確保 */
+    display: flex;         /* 中央揃えのため */
+    align-items: center;   /* 中央揃えのため */
+    justify-content: center; /* 中央揃えのため */
+    border-radius: 50%;    /* 丸い背景にする */
+    transition: all 0.2s ease; /* アニメーションを滑らかに */
+    margin: -8px;          /* 周辺の余白を調整して位置を微調整 */
 }
 
-.delete-btn:hover { color: #ef4444; }
+/* ホバー時のエフェクト（X風の薄い赤背景） */
+.delete-btn:hover {
+    color: #ef4444;        /* ホバー時にアイコンを赤く */
+    background-color: rgba(239, 68, 68, 0.1); /* ほんのり赤い背景 */
+}
 
 /* 文字数カウンター */
-.char-count {
+/* .char-count {
     font-size: 12px;
     color: var(--text-sub);
     margin-right: 12px;
-    font-family: monospace; /* 数字の幅を一定にしてガタつきを防止 */
-}
+    font-family: monospace;
+} */
 
 .char-count.warning {
     color: #f59e0b; /* 上限に近い時はオレンジ */
@@ -348,4 +344,94 @@ textarea {
 /* 600文字を完全に超えた場合（万が一JSの制限を抜けた際など） */
 .char-count.danger {
     color: #ef4444; /* 超過時は赤 */
+}
+
+/* サイドバーの境界と背景を明確化 */
+.sidebar {
+    width: 280px;
+    background-color: var(--bg-card); /* カードと同じ白背景を適用 */
+    border-right: 1px solid var(--border); /* 右側に境界線を追加 */
+    padding: 0 20px;
+    min-height: 100vh; /* 画面下まで背景を伸ばす */
+}
+
+/* ロゴ周りの微調整 */
+.app-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 32px;
+    padding: 12px 0;
+}
+
+.logo-icon {
+    color: var(--primary);
+}
+
+.compose-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center; /* これにより垂直方向の中央揃えが完了 */
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.char-count {
+    margin-right: 16px; /* ボタンとの距離を最適化 */
+    margin-bottom: 0;   /* 余計な余白をリセット */
+    line-height: 1;    /* 高さをボタンのテキストに合わせる */
+}
+
+/*[cite: 3] メインコンテンツの背景を調整（サイドバーとの対比のため） */
+.app-wrapper {
+    background-color: var(--bg-main); /* ページ全体はグレーに */
+    padding: 0; /* サイドバーを密着させるためリセット */
+}
+
+.main-content {
+    background-color: var(--bg-main);
+    padding: 24px;
+}
+
+/* 低評価ボタンのスタイル */
+.dislike-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-sub);
+}
+
+.dislike-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* ホバー時のエフェクト（青系）[cite: 3] */
+.dislike-btn:hover {
+    color: var(--primary);
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+/* 低評価済みの状態[cite: 3] */
+.dislike-btn.disliked {
+    color: var(--primary);
+}
+
+.dislike-btn.disliked .dislike-icon {
+    fill: none; /* 下向き矢印なので中身は塗らず、線の色を強調 */
+    stroke-width: 3.5;
 }
