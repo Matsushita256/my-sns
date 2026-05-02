@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My SNS</title>
     <link rel="stylesheet" href="style.css">
     <!-- <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%236366f1%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><circle cx=%2212%22 cy=%2212%22 r=%223%22></circle><line x1=%2212%22 y1=%229%22 x2=%2212%22 y2=%223%22></line><line x1=%2212%22 y1=%2221%22 x2=%2212%22 y2=%2215%22></line><line x1=%229%22 y1=%2212%22 x2=%223%22 y2=%2212%22></line><line x1=%2221%22 y1=%2212%22 x2=%2215%22 y2=%2212%22></line><path d=%22M12 3a9 9 0 0 1 9 9%22></path><path d=%22M3 12a9 9 0 0 1 9-9%22></path><path d=%22M12 21a9 9 0 0 1-9-9%22></path><path d=%22M21 12a9 9 0 0 1-9 9%22></path></svg>"> -->
-    
+
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="app-wrapper">
         <div class="container">
@@ -17,7 +19,7 @@
             <aside class="sidebar">
                 <div class="sidebar-sticky">
                     <h1 class="app-logo">
-    <!-- <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
+                        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="logo-icon">
         <circle cx="12" cy="12" r="3"></circle>
         <line x1="12" y1="9" x2="12" y2="3"></line>
         <line x1="12" y1="21" x2="12" y2="15"></line>
@@ -28,14 +30,16 @@
         <path d="M12 21a9 9 0 0 1-9-9"></path>
         <path d="M21 12a9 9 0 0 1-9 9"></path>
     </svg> -->
-    <span>My SNS</span>
-</h1>
-                    
+                        <span>My SNS</span>
+                    </h1>
+
                     <div class="search-section">
                         <div class="search-bar">
-                            <input type="text" id="search-input" placeholder="検索">
-                            <button onclick="performSearch()" class="btn-search">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <input type="text" class="search-input" placeholder="検索">
+                            <button class="btn-search" id="search-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                 </svg>
@@ -43,22 +47,76 @@
                         </div>
                     </div>
 
-                    <div id="login-area" class="auth-box card">
-                        <h4>アカウント</h4>
-                        <input type="text" id="login-username" placeholder="ユーザー名">
-                        <input type="password" id="login-password" placeholder="パスワード">
-                        <div class="auth-actions">
-                            <button onclick="login()" class="btn-login">ログイン</button>
-                            <button onclick="register()" class="btn-reg">登録</button>
-                        </div>
+                    <div id="auth-buttons" class="auth-box card" style="display: none;">
+                        <button id="open-login-btn" class="btn-primary-sm" style="margin-bottom: 8px;">ログイン</button>
+                        <button id="open-register-btn" class="btn-outline-sm">新規登録</button>
                     </div>
 
+                    <!-- ログイン用モーダル -->
+                    <dialog id="login-modal" class="modal-base">
+                        <div class="modal-header">
+                            <h2>ログイン</h2>
+                            <button class="close-modal icon-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="login-username" placeholder="ユーザー名" class="settings-input">
+                            <input type="password" id="login-password" placeholder="パスワード" class="settings-input">
+                            <button id="login-submit" class="btn-primary-sm">ログイン</button>
+                        </div>
+                    </dialog>
+
+                    <!-- 新規登録用モーダル -->
+                    <dialog id="register-modal" class="modal-base">
+                        <div class="modal-header">
+                            <h2>新規登録</h2>
+                            <button class="close-modal icon-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div style="position: relative;">
+                                <input type="text" id="register-username" placeholder="ユーザー名" class="settings-input">
+                                <span id="username-status" class="status-badge"></span>
+                            </div>
+                            <input type="password" id="register-password" placeholder="パスワード" class="settings-input">
+                            <input type="password" id="register-confirm" placeholder="パスワード（確認用）"
+                                class="settings-input">
+                            <button id="register-submit" class="btn-primary-sm">アカウント作成</button>
+                        </div>
+                    </dialog>
                     <div id="status-area" class="profile-box card">
-                        <div class="profile-info">
-                            <div class="avatar"></div>
-                            <div>
-                                <div id="display-username" class="user-name">未ログイン</div>
-                                <div class="user-handle">@Guest</div>
+                        <div class="profile-info"
+                            style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <div class="avatar"></div>
+                                <div>
+                                    <div id="display-username" class="user-name">未ログイン</div>
+                                    <div class="user-handle">@User</div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <!-- 設定アイコン -->
+                                <button id="settings-button" class="icon-btn" title="設定" style="display: none;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg>
+                                </button>
+
+                                <!-- ログアウトボタン (初期状態は非表示) -->
+                                <button id="logout-button" class="icon-btn logout-icon" title="ログアウト"
+                                    style="display: none;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -68,7 +126,7 @@
             <!-- 右側：タイムライン -->
             <main class="main-content">
                 <div class="page-title">ホーム</div>
-                
+
                 <!-- 投稿エリア -->
                 <div id="post-area" class="compose-box">
                     <div class="compose-main">
@@ -77,14 +135,37 @@
                     </div>
                     <div class="compose-footer">
                         <span id="char-count" class="char-count">0 / 600</span>
-                        <button onclick="submitPost()" id="post-button" class="btn-post" disabled>ポストする</button>
+                        <button id="post-button" class="btn-post" disabled>ポストする</button>
                     </div>
                 </div>
-
+                <div class="timeline-divider"></div>
                 <div id="timeline"></div>
             </main>
         </div>
     </div>
-    <script src="script.js"></script>
+    <!-- 設定用モーダル -->
+    <dialog id="settings-modal" class="modal-base">
+        <div class="modal-header">
+            <h2>設定</h2>
+            <button class="close-modal icon-btn">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-section">
+                <h3>パスワード変更</h3>
+                <input type="password" id="change-current-password" placeholder="現在のパスワード" class="settings-input">
+                <input type="password" id="change-new-password" placeholder="新しいパスワード" class="settings-input">
+                <input type="password" id="change-confirm-password" placeholder="新しいパスワード（確認）" class="settings-input">
+                <button id="update-password-btn" class="btn-primary-sm">パスワードを更新</button>
+            </div>
+            <hr class="settings-divider">
+            <div class="settings-section">
+                <h3 class="danger-text">危険な操作</h3>
+                <input type="password" id="delete-confirm-password" placeholder="現在のパスワード" class="settings-input">
+                <button id="delete-account-btn" class="btn-danger">アカウントを削除する</button>
+            </div>
+        </div>
+    </dialog>
+    <script type="module" src="./js/app.js"></script>
 </body>
+
 </html>

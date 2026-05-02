@@ -1,4 +1,7 @@
-/* モダンなカラーパレットとフォント設定 */
+/* ==========================================================================
+   基本設定・変数
+   ========================================================================== */
+
 :root {
     --primary: #6366f1;         /* インディゴ（アクセント） */
     --primary-hover: #4f46e5;
@@ -19,6 +22,15 @@ body {
     line-height: 1.5;
 }
 
+.app-wrapper {
+    background-color: var(--bg-main); /* ページ全体はグレーに */
+    padding: 0; /* サイドバーを密着させるためリセット */
+}
+
+/* ==========================================================================
+   レイアウトの骨組みを並べる
+   ========================================================================== */
+
 .container {
     display: flex;
     gap: 24px;
@@ -26,9 +38,12 @@ body {
     max-width: 1100px;
 }
 
-/* --- サイドバーのデザイン --- */
 .sidebar {
     width: 280px;
+    background-color: var(--bg-card); /* カードと同じ白背景を適用 */
+    border-right: 1px solid var(--border); /* 右側に境界線を追加 */
+    padding: 0 20px;
+    min-height: 100vh; /* 画面下まで背景を伸ばす */
 }
 
 .sidebar-sticky {
@@ -36,31 +51,64 @@ body {
     top: 24px;
 }
 
-.app-logo {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--primary);
-    margin-bottom: 24px;
-    letter-spacing: -0.025em;
+.main-content {
+    background-color: var(--bg-main);
+    padding: 24px;
+    width: 600px;
 }
 
-.card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: var(--shadow);
+/* ==========================================================================
+   汎用的な要素
+   ========================================================================== */
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 }
 
-.card h3, .card h4 {
-    margin-top: 0;
-    font-size: 15px;
+.icon-btn:hover {
+    background-color: var(--border);
     color: var(--text-main);
 }
 
-/* 検索窓をsqlab風のスリムなデザインに */
-/* 検索バー全体の微調整 */
+/* ==========================================================================
+   サイドバー
+   ========================================================================== */
+
+.app-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 32px;
+    padding: 12px 0;
+}
+
+/* アイコンは現段階ではなし */
+/* .logo-icon {
+    color: var(--primary);
+} */
+
+.page-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.search-section {
+    margin-bottom: 15px;
+}
+
 .search-bar {
     display: flex;
     align-items: center;
@@ -75,7 +123,7 @@ body {
     border-color: var(--primary); /* 入力中に枠線の色を変える */
 }
 
-.search-bar input {
+.search-input {
     flex: 1;
     border: none;
     background: transparent;
@@ -109,43 +157,31 @@ body {
     transform: translateY(1px); /* 押した感を出す */
 }
 
-.search-section {
-    margin-bottom: 15px;
+.logout-icon:hover {
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
 }
 
-.auth-box input {
+.btn-outline-sm {
     width: 100%;
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid var(--border);
     border-radius: 6px;
-    box-sizing: border-box;
-}
-
-.auth-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-login, .btn-reg {
-    flex: 1;
-    padding: 8px;
-    border-radius: 6px;
-    font-weight: 600;
     cursor: pointer;
-    border: 1px solid var(--border);
+    font-weight: 600;
 }
 
-.btn-login { background: var(--primary); color: white; border: none; }
-.btn-reg { background: white; color: var(--text-main); }
-
-.page-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 20px;
+.btn-outline-sm:hover {
+    background: rgba(29, 155, 240, 0.1);
 }
 
-/* --- 投稿エリア（sqlab/モダンUI風） --- */
+
+/* ==========================================================================
+   投稿フォーム
+   ========================================================================== */
+/* 
 .compose-box {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -153,12 +189,50 @@ body {
     padding: 16px;
     margin-bottom: 24px;
     box-shadow: var(--shadow);
-}
+} */
 
 .compose-main {
     display: flex;
     gap: 12px;
 }
+
+/* 1. 投稿欄に少し浮き出し感を出す */
+.compose-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 24px; /* タイムラインとの間隔を広げて境界を明確にする */
+    /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); */
+}
+
+/* 2. 境界線とラベルの追加 */
+.timeline-divider {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.timeline-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin-left: 12px;
+}
+
+/* 3. タイムライン全体の背景にわずかな変化をつける（オプション） */
+/* #tweet-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+} */
+
+
+
 
 textarea {
     width: 100%;
@@ -171,13 +245,31 @@ textarea {
     color: var(--text-main);
 }
 
-/* .compose-footer {
+.compose-footer {
     display: flex;
     justify-content: flex-end;
+    align-items: center; /* これにより垂直方向の中央揃えが完了 */
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid var(--border);
-} */
+}
+
+.char-count {
+    margin-right: 16px; /* ボタンとの距離を最適化 */
+    margin-bottom: 0;   /* 余計な余白をリセット */
+    line-height: 1;    /* 高さをボタンのテキストに合わせる */
+    color: var(--text-sub);
+    font-size: 15px;
+}
+
+.char-count.warning {
+    color: #f59e0b; /* 上限に近い時はオレンジ */
+    font-weight: bold;
+}
+
+.char-count.danger {
+    color: #ef4444; /* 超過時は赤 */
+}
 
 .btn-post {
     background-color: var(--primary);
@@ -191,10 +283,19 @@ textarea {
     transition: background 0.2s;
 }
 
-.btn-post:hover:not(:disabled) { background-color: var(--primary-hover); }
-.btn-post:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-post:hover:not(:disabled) { 
+    background-color: var(--primary-hover); 
+}
 
-/* --- タイムライン（カード形式） --- */
+.btn-post:disabled { 
+    opacity: 0.4; 
+    cursor: not-allowed; 
+}
+
+/* ==========================================================================
+   タイムライン
+   ========================================================================== */
+
 .tweet {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -205,7 +306,7 @@ textarea {
     display: flex;
     gap: 16px;
     transition: transform 0.1s;
-    box-shadow: var(--shadow);
+    /* box-shadow: var(--shadow); */
 }
 
 .tweet:hover {
@@ -220,14 +321,29 @@ textarea {
     flex-shrink: 0;
 }
 
-.tweet-body { flex: 1; }
-
 .tweet-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start; /* ユーザー名と削除ボタンの上端を揃える */
     margin-bottom: 8px;
 }
+
+
+/* なにこれ？　*/
+.tweet-body { flex: 1; }
+
+/* ハイライト表示 */
+.highlight {
+    background-color: #fef08a; /* 黄色 */
+    color: #854d0e;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* これを後で追加 */
+/* .tweet-user-info {
+
+} */
 
 .username {
     font-weight: 700;
@@ -245,13 +361,9 @@ textarea {
     white-space: pre-wrap; /* 改行を維持 */
 }
 
-/* ハイライト表示 */
-.highlight {
-    background-color: #fef08a; /* 黄色 */
-    color: #854d0e;
-    padding: 0 2px;
-    border-radius: 2px;
-}
+/* ==========================================================================
+   アクションボタン
+   ========================================================================== */
 
 /* 投稿本文といいねボタンの間の距離を広げる */
 .tweet-actions {
@@ -282,7 +394,7 @@ textarea {
 }
 
 /* ハートアイコンをさらにコンパクトに */
-.heart-icon {
+.like-icon {
     width: 18px;            /* 16px〜18pxがXに近いサイズ感です */
     height: 18px;
     display: block;
@@ -300,101 +412,9 @@ textarea {
     color: #f91880;         /* Xのブランドカラーに近いピンクレッド */
 }
 
-.like-btn.liked .heart-icon {
+.like-btn.liked .like-icon {
     fill: #f91880;          /* 中を塗りつぶす */
     stroke: #f91880;
-}
-
-/* 削除ボタンのベーススタイル */
-.delete-btn {
-    border: none;
-    background: none;
-    color: var(--text-sub);
-    cursor: pointer;
-    font-size: 18px;
-    width: 28px;           /* クリック領域を確保 */
-    height: 28px;          /* クリック領域を確保 */
-    display: flex;         /* 中央揃えのため */
-    align-items: center;   /* 中央揃えのため */
-    justify-content: center; /* 中央揃えのため */
-    border-radius: 50%;    /* 丸い背景にする */
-    transition: all 0.2s ease; /* アニメーションを滑らかに */
-    margin: -8px;          /* 周辺の余白を調整して位置を微調整 */
-}
-
-/* ホバー時のエフェクト（X風の薄い赤背景） */
-.delete-btn:hover {
-    color: #ef4444;        /* ホバー時にアイコンを赤く */
-    background-color: rgba(239, 68, 68, 0.1); /* ほんのり赤い背景 */
-}
-
-/* 文字数カウンター */
-/* .char-count {
-    font-size: 12px;
-    color: var(--text-sub);
-    margin-right: 12px;
-    font-family: monospace;
-} */
-
-.char-count.warning {
-    color: #f59e0b; /* 上限に近い時はオレンジ */
-    font-weight: bold;
-}
-
-/* 600文字を完全に超えた場合（万が一JSの制限を抜けた際など） */
-.char-count.danger {
-    color: #ef4444; /* 超過時は赤 */
-}
-
-/* サイドバーの境界と背景を明確化 */
-.sidebar {
-    width: 280px;
-    background-color: var(--bg-card); /* カードと同じ白背景を適用 */
-    border-right: 1px solid var(--border); /* 右側に境界線を追加 */
-    padding: 0 20px;
-    min-height: 100vh; /* 画面下まで背景を伸ばす */
-}
-
-/* ロゴ周りの微調整 */
-.app-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--primary);
-    margin-bottom: 32px;
-    padding: 12px 0;
-}
-
-.logo-icon {
-    color: var(--primary);
-}
-
-.compose-footer {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center; /* これにより垂直方向の中央揃えが完了 */
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-}
-
-.char-count {
-    margin-right: 16px; /* ボタンとの距離を最適化 */
-    margin-bottom: 0;   /* 余計な余白をリセット */
-    line-height: 1;    /* 高さをボタンのテキストに合わせる */
-}
-
-/*[cite: 3] メインコンテンツの背景を調整（サイドバーとの対比のため） */
-.app-wrapper {
-    background-color: var(--bg-main); /* ページ全体はグレーに */
-    padding: 0; /* サイドバーを密着させるためリセット */
-}
-
-.main-content {
-    background-color: var(--bg-main);
-    padding: 24px;
 }
 
 /* 低評価ボタンのスタイル */
@@ -434,4 +454,317 @@ textarea {
 .dislike-btn.disliked .dislike-icon {
     fill: none; /* 下向き矢印なので中身は塗らず、線の色を強調 */
     stroke-width: 3.5;
+}
+
+/* 削除ボタンのベーススタイル */
+.delete-btn {
+    border: none;
+    background: none;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-size: 18px;
+    width: 28px;           /* クリック領域を確保 */
+    height: 28px;          /* クリック領域を確保 */
+    display: flex;         /* 中央揃えのため */
+    align-items: center;   /* 中央揃えのため */
+    justify-content: center; /* 中央揃えのため */
+    border-radius: 50%;    /* 丸い背景にする */
+    transition: all 0.2s ease; /* アニメーションを滑らかに */
+    margin: -8px;          /* 周辺の余白を調整して位置を微調整 */
+}
+
+/* ホバー時のエフェクト（X風の薄い赤背景） */
+.delete-btn:hover {
+    color: #ef4444;        /* ホバー時にアイコンを赤く */
+    background-color: rgba(239, 68, 68, 0.1); /* ほんのり赤い背景 */
+}
+
+/* ==========================================================================
+   モーダル関係
+   ========================================================================== */
+
+/* 共通のモーダルスタイル */
+.modal-base {
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 背景（オーバーレイ）のスタイル */
+.modal-base::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px); /* 背景を少しぼかすとおしゃれです */
+}
+
+.modal-header {
+    display: flex;             /* 横並びにする */
+    justify-content: space-between; /* タイトルを左、ボタンを右に */
+    align-items: center;       /* 上下の中央を揃える */
+    padding: 16px 20px;        /* 内側の余白 */
+    /* background: #f8f9fa; */
+    border-bottom: 1px solid var(--border);
+}
+
+/* タイトル文字（設定、新規登録など）の個別設定 */
+.modal-header h2 {
+    margin: 0;                 /* 余計な隙間を消す */
+    font-size: 18px;           /* 文字の大きさ */
+    text-align: left;          /* 明示的に左寄せ */
+    flex: 1;                   /* 左側のスペースを確保 */
+}
+
+/* .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+} */
+
+.modal-body {
+    padding: 24px;
+}
+
+/* ==========================================================================
+   設定画面
+   ========================================================================== */
+
+.settings-section {
+    margin-bottom: 24px;
+}
+
+.settings-section h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--text-main);
+}
+
+.settings-input {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.settings-input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.btn-primary-sm {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.btn-primary-sm:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-danger {
+    width: 100%;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+.btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.settings-divider {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+}
+
+/* ==========================================================================
+   新規登録画面
+   ========================================================================== */
+
+.status-badge {
+    position: absolute;
+    right: 12px;
+    top: 10px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.is-available { 
+    color: #10b981; 
+}
+
+.is-taken { 
+    color: #ef4444; 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* .settings-note {
+    font-size: 13px;
+    color: var(--text-sub);
+    margin-bottom: 8px;
+} */
+
+
+
+
+
+
+
+
+
+
+
+/* .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+}
+
+.card h3, .card h4 {
+    margin-top: 0;
+    font-size: 15px;
+    color: var(--text-main);
+} */
+
+
+
+
+
+/* .auth-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-sizing: border-box;
+} */
+
+/* .auth-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-login, .btn-reg {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+}
+
+.btn-login { background: var(--primary); color: white; border: none; }
+.btn-reg { background: white; color: var(--text-main); } */
+
+
+
+
+
+
+
+
+
+
+
+/* 文字数カウンター */
+/* .char-count {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-right: 12px;
+    font-family: monospace;
+} */
+
+
+
+
+
+
+
+
+/* .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    padding: 24px;
+    border-radius: var(--radius);
+    width: 90%;
+    max-width: 400px;
+    box-shadow: var(--shadow);
+} */
+
+
+
+
+
+
+
+
+
+/* 
+.danger-text {
+    color: #ef4444;
+} */
+
+
+
+
+
+
+
+@keyframes modal-show {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
