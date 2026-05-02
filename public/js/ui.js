@@ -29,7 +29,7 @@ export function createTweetHTML(post, searchQuery = "") {
                             c0,21.96-11.96,38.18-24.25,53.09c-11.8,14.26-43.46,40.23-43.46,40.23h-0.33c0,0-31.5-25.97-43.29-40.23
                             c-12.29-14.91-24.25-31.13-24.25-53.09c0-18.52,14.26-33.26,31.95-33.26c14.91,0,30.18,8.36,35.59,25.73H150.08z"></path>
                         </svg>
-                        <span>${post.like_count || 0}</span>
+                        <span id="count">${post.like_count || 0}</span>
                     </button>
 
                     <!-- 低評価ボタン -->
@@ -38,7 +38,7 @@ export function createTweetHTML(post, searchQuery = "") {
                             <path d="M7 10l5 5 5-5"></path>
                             <path d="M12 15V3"></path>
                         </svg>
-                        <span>${post.dislike_count || 0}</span>
+                        <span id="count">${post.dislike_count || 0}</span>
                     </button>
                 </div>
             </div>

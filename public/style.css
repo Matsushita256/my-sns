@@ -440,13 +440,13 @@ textarea {
     display: block;
 }
 
-/* ホバー時のエフェクト（青系）[cite: 3] */
+/* ホバー時のエフェクト（青系）*/
 .dislike-btn:hover {
     color: var(--primary);
     background-color: rgba(99, 102, 241, 0.1);
 }
 
-/* 低評価済みの状態[cite: 3] */
+/* 低評価済みの状態 */
 .dislike-btn.disliked {
     color: var(--primary);
 }

@@ -11,6 +11,7 @@ export async function fetchPosts(query = "") {
 
 // いいね・低評価のトグル
 // typeには"like"か"dislike"を入れる
+// 戻り値は変更後に自分がlike, dislikeをしているか
 export async function toggleReaction(type, postId) {
     const response = await fetch(`/api/${type}`, {
         method: 'POST',
@@ -21,8 +22,9 @@ export async function toggleReaction(type, postId) {
 
     if (!response.ok)
         throw new Error(data.error || "いいね・低評価のトグルに失敗しました");
-
-    return data;
+    
+    const isLike = type === "like";
+    return data.success ^ isLike;
 }
 
 // 新規登録機能

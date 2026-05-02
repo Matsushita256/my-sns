@@ -1,8 +1,10 @@
 const express = require("express");
 const session = require("express-session");
+const pool = require("./config/db");
 const pgSession = require('connect-pg-simple')(session);
 const authRoutes = require("./routes/auth");
 const postRoutes = require("./routes/posts");
+const { migrateMissingEmbeddings } = require("./controllers/recommendation-engine"); // 追加
 
 const app = express();
 
@@ -39,4 +41,13 @@ app.use(session({
 app.use("/api", authRoutes);
 app.use("/api", postRoutes);
 
-app.listen(3000, () => console.log("Server running..."));
+app.listen(3000, () => {
+    // --- ここで移行スクリプトを実行 ---
+    try {
+        // サーバー起動時にバックグラウンドで実行
+        // await を付けないことで、APIの受付開始を妨げずに裏で処理させます
+        migrateMissingEmbeddings(pool);
+    } catch (err) {
+        console.error("Migration failed to start:", err);
+    }
+});

@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadTimeline(query = "") {
     try {
         const posts = await api.fetchPosts(query);
+        lastLoadTime = Date.now(); // 読み込み時刻を更新
         const container = document.getElementById('timeline');
         container.innerHTML = posts.map(p => createTweetHTML(p, query)).join('');
         // 描画した後にボタンを探してイベントを登録する
@@ -36,7 +37,12 @@ async function loadTimeline(query = "") {
                 const postId = button.getAttribute('post-id');
                 try {
                     await api.toggleReaction("like", postId);
-                    loadTimeline();
+                    button.classList.toggle("liked");
+                    button.querySelector("#count").innerHTML = parseInt(button.querySelector("#count").innerHTML) + (button.classList.contains("liked") ? 1 : -1);
+
+                    // TLを即時更新せず、「変更があった」フラグを立てる
+                    hasUnappliedActivity = true;
+                    checkUpdateRequirement();
                 } catch (error) {
                     alert(error.message);
                 }
@@ -47,7 +53,11 @@ async function loadTimeline(query = "") {
                 const postId = button.getAttribute('post-id');
                 try {
                     await api.toggleReaction("dislike", postId);
-                    loadTimeline();
+                    button.classList.toggle("disliked");
+                    button.querySelector("#count").innerHTML = parseInt(button.querySelector("#count").innerHTML) + (button.classList.contains("disliked") ? 1 : -1);
+                    // TLを即時更新せず、「変更があった」フラグを立てる
+                    hasUnappliedActivity = true;
+                    checkUpdateRequirement();
                 } catch (error) {
                     alert(error.message);
                 }
@@ -247,7 +257,7 @@ document.getElementById("logout-button").addEventListener("click", async () => {
         await api.logout();
         // ページをリロードして初期状態（未ログイン状態）に戻す
         // これにより自動ログインのチェックも再度走り、未ログインUIが適用されます
-        location.reload(); 
+        location.reload();
     } catch (err) {
         alert("ログアウトに失敗しました");
     }
@@ -277,6 +287,7 @@ function closeModal(id) {
 document.getElementById("open-login-btn").addEventListener("click", () => openModal("login-modal"));
 document.getElementById("open-register-btn").addEventListener("click", () => openModal("register-modal"));
 document.getElementById("settings-button").addEventListener("click", () => openModal("settings-modal"));
+document.getElementById("update-btn").addEventListener("click", applyNewTimeline);
 
 // すべての閉じるボタンに対応
 document.querySelectorAll(".close-modal").forEach(btn => {
@@ -291,3 +302,36 @@ document.querySelectorAll("dialog").forEach(dialog => {
         if (e.target === dialog) dialog.close();
     });
 });
+
+let lastLoadTime = Date.now();
+let hasUnappliedActivity = false;
+const UPDATE_COOLDOWN = 10000; // 10秒間はバナーを出さない（頻繁な表示を防止）
+
+// バナーを表示するか判定する関数
+function checkUpdateRequirement() {
+    const now = Date.now();
+    const timeSinceLastLoad = now - lastLoadTime;
+
+    // 活動があり、かつ一定時間が経過していればバナー表示
+    if (hasUnappliedActivity && timeSinceLastLoad > UPDATE_COOLDOWN) {
+        document.getElementById("update-banner").style.display = "block";
+    } else if (hasUnappliedActivity) {
+        // 時間が経っていない場合は、数秒後に再チェック
+        setTimeout(checkUpdateRequirement, UPDATE_COOLDOWN - timeSinceLastLoad + 100);
+    }
+}
+
+// ボタンを押した時の処理
+async function applyNewTimeline() {
+    // 1. バナーを隠す
+    document.getElementById("update-banner").style.display = "none";
+    // 2. フラグをリセット
+    hasUnappliedActivity = false;
+    lastLoadTime = Date.now();
+
+    // 3. タイムラインを再読み込み
+    await loadTimeline();
+
+    // 4. 一番上にスクロール
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
