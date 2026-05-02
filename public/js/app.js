@@ -188,7 +188,7 @@ document.getElementById("update-password-btn").addEventListener("click", async (
         alert("パスワードを変更しました。");
         // 入力欄をクリア
         document.querySelectorAll(".settings-input").forEach(el => el.value = "");
-        document.getElementById("settings-modal").style.display = "none";
+        document.getElementById("settings-modal").close();
     } catch (error) {
         alert(error.message);
     }
