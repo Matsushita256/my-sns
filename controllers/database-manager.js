@@ -20,7 +20,7 @@ class ServerDatabaseManager {
         return result.rows.map(r => r.post_id);
     }
 
-    async getUserRecentVectors(userId) {
+    async getUserRecentLikeVectors(userId) {
         // 直近の「いいね」した投稿のベクトルを取得
         const query = `
             SELECT p.embedding as vector, l.created_at as "createdAt"
@@ -47,6 +47,30 @@ class ServerDatabaseManager {
         const query = "SELECT interest_vector FROM user_interests WHERE user_id = $1";
         const result = await pool.query(query, [userId]);
         return result.rows.length > 0 ? result.rows[0].interest_vector : null;
+    }
+
+    // 自分の過去の投稿ベクトルを取得
+    async getUserRecentPostVectors(userId) {
+        const query = `
+        SELECT embedding as vector, created_at as "createdAt"
+        FROM posts WHERE user_id = $1 AND embedding IS NOT NULL
+        ORDER BY created_at DESC LIMIT 50
+    `;
+        const res = await pool.query(query, [userId]);
+        return res.rows;
+    }
+
+    // 低評価した投稿のベクトルを取得
+    async getUserRecentDislikeVectors(userId) {
+        const query = `
+        SELECT p.embedding as vector, d.created_at as "createdAt"
+        FROM dislikes d
+        JOIN posts p ON d.post_id = p.id
+        WHERE d.user_id = $1 AND p.embedding IS NOT NULL
+        ORDER BY d.created_at DESC LIMIT 50
+    `;
+        const res = await pool.query(query, [userId]);
+        return res.rows;
     }
 }
 

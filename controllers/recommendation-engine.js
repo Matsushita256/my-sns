@@ -82,7 +82,7 @@ class RecommendationEngine {
                 contentScore = this.cosineSimilarity(interestProfile, post.embedding);
             } else {
                 // プロファイルがない場合は、直近の投稿ベクトル群と比較（前回実装のMax-Pooling）
-                contentScore = this.calcContentScore(context.recentVectors, post.embedding);
+                //contentScore = this.calcContentScore(context.recentVectors, post.embedding);
             }
 
             // 総合スコアの算出（重み付け）
@@ -122,7 +122,7 @@ class RecommendationEngine {
         );
 
         // 3. ユーザーが最近投稿（またはいいね）したコンテンツの埋め込みベクトル配列
-        const recentVectors = await db.getUserRecentVectors(userId);
+        const recentVectors = await db.getUserRecentLikeVectors(userId);
 
         return {
             userId: userId,
@@ -223,54 +223,51 @@ class RecommendationEngine {
     }
 
     /**
- * ユーザーの過去の「いいね」から関心プロファイルを再計算する
- */
+     * ユーザープロファイルを多角的に更新する（いいね、自分の投稿、低評価を考慮）
+     */
     async updateUserInterestProfile(userId, db) {
-        const interactions = await db.getUserRecentVectors(userId);
-        if (interactions.length === 0) return null;
+        // 1. 各種データを並列で取得
+        const [likes, myPosts, dislikes] = await Promise.all([
+            db.getUserRecentLikeVectors(userId),  // 自分がいいねした投稿
+            db.getUserRecentPostVectors(userId),  // 自分の過去の投稿
+            db.getUserRecentDislikeVectors(userId) // 自分が低評価した投稿
+        ]);
 
-        const now = new Date();
         let totalWeight = 0;
-        // 32次元のゼロベクトルで初期化
-        let profileVector = new Array(32).fill(0);
+        let profileVector = new Array(384).fill(0); // モデルに合わせて384次元
+        const now = new Date();
 
-        for (const item of interactions) {
-            if (!item.vector) continue;
+        // ヘルパー関数：重み付き加算
+        const addVectors = (items, baseWeight) => {
+            for (const item of items) {
+                if (!item.vector) continue;
+                const ageHours = (now - new Date(item.createdAt)) / (1000 * 60 * 60);
+                const timeDecay = this.calculateTimeDecay(ageHours, this.halfLife.userInterest);
+                const finalWeight = baseWeight * timeDecay;
 
-            // 時間減衰の計算（古い「いいね」ほど影響を小さくする）
-            const ageHours = (now - new Date(item.createdAt)) / (1000 * 60 * 60);
-            const weight = this.calculateTimeDecay(ageHours, this.halfLife.userInterest);
-
-            // 重み付き加算
-            for (let i = 0; i < 32; i++) {
-                profileVector[i] += item.vector[i] * weight;
+                for (let i = 0; i < 384; i++) {
+                    profileVector[i] += item.vector[i] * finalWeight;
+                }
+                totalWeight += Math.abs(finalWeight); // 重みの絶対値を加算
             }
-            totalWeight += weight;
-        }
+        };
+
+        // 2. スコアの加算・減算
+        addVectors(likes, 1.0);      // 「いいね」は正の影響（100%）
+        addVectors(myPosts, 0.5);    // 「自分の投稿」も好みの指標（50%）
+        addVectors(dislikes, -1.2);  // 「低評価」は負の影響（-120%：嫌いなものは強めに避ける）
 
         if (totalWeight === 0) return null;
 
-        // 平均化と正規化
-        const averagedVector = profileVector.map(v => v / totalWeight);
-        const magnitude = Math.sqrt(averagedVector.reduce((sum, val) => sum + val * val, 0));
-        const normalizedVector = averagedVector.map(val => (magnitude > 0 ? val / magnitude : 0));
+        // 3. 正規化（ベクトルの長さを1にする）
+        const magnitude = Math.sqrt(profileVector.reduce((sum, val) => sum + val * val, 0));
+        const normalizedVector = profileVector.map(val => (magnitude > 0 ? val / magnitude : 0));
 
-        // DBに保存
         await db.saveUserInterest(userId, normalizedVector);
+        //console.log(`profile updated (${normalizedVector.map(n => n.toFixed(6)).join(",")})`);
         return normalizedVector;
     }
 }
-
-// function generateDummyEmbedding(text) {
-//     const vector = new Array(32).fill(0);
-//     // 文字コードを利用して、文章の特徴を32個の数値に分散させる簡易的なハッシュ化
-//     for (let i = 0; i < text.length; i++) {
-//         vector[i % 32] += text.charCodeAt(i) / 1000;
-//     }
-//     // 類似度計算のために正規化（長さが1になるように調整）
-//     const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-//     return vector.map(val => (magnitude > 0 ? val / magnitude : 0));
-// }
 
 class FeatureExtractor {
     static instance = null;
@@ -279,7 +276,7 @@ class FeatureExtractor {
         if (this.instance === null) {
             // require ではなく 動的 import() を使用する
             const { pipeline } = await import('@xenova/transformers');
-            
+
             // モデルのロード
             this.instance = await pipeline('feature-extraction', 'Xenova/multilingual-e5-small');
         }
@@ -290,7 +287,7 @@ class FeatureExtractor {
 // 既存の関数の置き換え（非同期にする必要があります）
 async function generateEmbedding(text) {
     const extractor = await FeatureExtractor.getInstance();
-    
+
     // e5モデルの場合、テキストの先頭に "query: " をつけるのが推奨されています
     const output = await extractor(`query: ${text}`, {
         pooling: 'mean',
@@ -299,21 +296,6 @@ async function generateEmbedding(text) {
 
     // Float32Arrayを普通の配列に変換して返す
     return Array.from(output.data);
-}
-
-async function migrateOldPosts() {
-    // embedding が NULL の投稿を取得
-    const result = await pool.query("SELECT id, content FROM posts WHERE embedding IS NULL");
-    console.log(`${result.rows.length} 件の古い投稿を更新します...`);
-
-    for (const row of result.rows) {
-        const vector = await generateRealEmbedding(row.content);
-        await pool.query("UPDATE posts SET embedding = $1 WHERE id = $2", [
-            JSON.stringify(vector),
-            row.id
-        ]);
-    }
-    console.log("移行が完了しました。");
 }
 
 async function migrateMissingEmbeddings(pool) {

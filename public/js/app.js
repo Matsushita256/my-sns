@@ -2,6 +2,9 @@ import * as api from './api.js';
 import { createTweetHTML } from './ui.js';
 
 console.log("app.js loaded");
+let lastLoadTime = Date.now();
+let hasUnappliedActivity = false;
+const UPDATE_COOLDOWN = 10000; // 10秒間はバナーを出さない（頻繁な表示を防止）
 
 // ページ読み込み時のイベント
 document.addEventListener('DOMContentLoaded', async () => {
@@ -302,10 +305,6 @@ document.querySelectorAll("dialog").forEach(dialog => {
         if (e.target === dialog) dialog.close();
     });
 });
-
-let lastLoadTime = Date.now();
-let hasUnappliedActivity = false;
-const UPDATE_COOLDOWN = 10000; // 10秒間はバナーを出さない（頻繁な表示を防止）
 
 // バナーを表示するか判定する関数
 function checkUpdateRequirement() {

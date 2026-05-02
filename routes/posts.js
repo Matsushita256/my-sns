@@ -101,14 +101,14 @@ router.get("/get", async (req, res) => {
 //         `;
 
 //         const result = await pool.query(query, queryParams);
-        
+
 //         // カウント値は PostgreSQL から文字列で返ってくるため、数値に変換してクライアントに返します
 //         const rows = result.rows.map(row => ({
 //             ...row,
 //             like_count: parseInt(row.like_count) || 0,
 //             dislike_count: parseInt(row.dislike_count) || 0
 //         }));
-        
+
 //         res.json(rows);
 //     } catch (err) {
 //         console.error(err);
@@ -144,7 +144,7 @@ router.post("/post", async (req, res) => {
             if (diffInSeconds < LIMIT_SECONDS) {
                 const waitTime = LIMIT_SECONDS - diffInSeconds;
                 return res.status(400).json({
-                    error: `連投制限中です。あと ${waitTime} 秒待ってください` 
+                    error: `連投制限中です。あと ${waitTime} 秒待ってください`
                 });
             }
         }
@@ -157,6 +157,10 @@ router.post("/post", async (req, res) => {
             "INSERT INTO posts (user_id, content, embedding) VALUES ($1, $2, $3)",
             [userId, content, JSON.stringify(embedding)]
         );
+
+        engine.updateUserInterestProfile(userId, dbManager).catch(err => {
+            console.error("Profile update error (post):", err);
+        });
         res.json({ success: true });
     } catch (err) {
         console.error(err);
@@ -200,15 +204,15 @@ router.post("/like", async (req, res) => {
             "SELECT id FROM likes WHERE post_id = $1 AND user_id = $2",
             [post_id, userId]
         );
-        
+
         if (check.rows.length > 0) {
             await pool.query("DELETE FROM likes WHERE post_id = $1 AND user_id = $2", [post_id, userId]);
         } else {
             await pool.query("INSERT INTO likes (post_id, user_id) VALUES ($1, $2)", [post_id, userId]);
         }
 
-        // --- ここから追加：バックエンドでプロファイルを更新 ---
-        // awaitを使わずに実行することで、レスポンスを待たせずに裏側で計算させます
+        // バックエンドでプロファイルを更新 ---
+        // awaitを使わずに実行することで、レスポンスを待たせずに裏側で計算させる
         engine.updateUserInterestProfile(userId, dbManager).catch(err => {
             console.error("Profile update error:", err);
         });
@@ -234,14 +238,16 @@ router.post("/dislike", async (req, res) => {
         );
 
         if (check.rows.length > 0) {
-            // すでに低評価済みなら削除（取り消し）
             await pool.query("DELETE FROM dislikes WHERE user_id = $1 AND post_id = $2", [userId, post_id]);
-            res.json({ success: true, action: "un-disliked" });
         } else {
-            // 低評価がなければ追加
             await pool.query("INSERT INTO dislikes (user_id, post_id) VALUES ($1, $2)", [userId, post_id]);
-            res.json({ success: true, action: "disliked" });
         }
+
+        engine.updateUserInterestProfile(userId, dbManager).catch(err => {
+            console.error("Profile update error (dislike):", err);
+        });
+
+        res.json({ success: true });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "低評価の処理に失敗しました" });
