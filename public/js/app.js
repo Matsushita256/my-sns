@@ -1,5 +1,5 @@
 import * as api from './api.js';
-import { createTweetHTML } from './ui.js';
+import * as ui from './ui.js';
 
 console.log("app.js loaded");
 let lastLoadTime = Date.now();
@@ -33,55 +33,86 @@ async function loadTimeline(query = "") {
         const posts = await api.fetchPosts(query);
         lastLoadTime = Date.now(); // 読み込み時刻を更新
         const container = document.getElementById('timeline');
-        container.innerHTML = posts.map(p => createTweetHTML(p, query)).join('');
+        container.innerHTML = posts.map(p => ui.createTweetHTML(p, query)).join('');
         // 描画した後にボタンを探してイベントを登録する
-        container.querySelectorAll('.like-btn').forEach(button => {
-            button.addEventListener('click', async () => {
-                const postId = button.getAttribute('post-id');
-                try {
-                    await api.toggleReaction("like", postId);
-                    button.classList.toggle("liked");
-                    button.querySelector("#count").innerHTML = parseInt(button.querySelector("#count").innerHTML) + (button.classList.contains("liked") ? 1 : -1);
+        bindPostEvents(container);
 
-                    // TLを即時更新せず、「変更があった」フラグを立てる
-                    hasUnappliedActivity = true;
-                    checkUpdateRequirement();
-                } catch (error) {
-                    alert(error.message);
-                }
-            });
-        });
-        container.querySelectorAll('.dislike-btn').forEach(button => {
-            button.addEventListener('click', async () => {
-                const postId = button.getAttribute('post-id');
-                try {
-                    await api.toggleReaction("dislike", postId);
-                    button.classList.toggle("disliked");
-                    button.querySelector("#count").innerHTML = parseInt(button.querySelector("#count").innerHTML) + (button.classList.contains("disliked") ? 1 : -1);
-                    // TLを即時更新せず、「変更があった」フラグを立てる
-                    hasUnappliedActivity = true;
-                    checkUpdateRequirement();
-                } catch (error) {
-                    alert(error.message);
-                }
-            });
-        });
-        container.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', async () => {
-                if (!confirm('本当にこの投稿を削除しますか？')) return;
-
-                const postId = button.getAttribute('post-id');
-                try {
-                    await api.deletePost(postId);
-                    loadTimeline();
-                } catch (error) {
-                    alert(error.message);
-                }
-            });
-        });
     } catch (error) {
         alert(error.message);
     }
+}
+
+// 動的に生成された投稿のボタン群にイベントを割り当てる関数
+// （既存の loadTimeline 内のイベント登録処理を関数として切り出したもの）
+function bindPostEvents(container) {
+    container.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const postId = button.getAttribute('post-id');
+            try {
+                await api.toggleReaction("like", postId);
+                button.classList.toggle("liked");
+                button.querySelector("#count").innerHTML = parseInt(button.querySelector("#count").innerHTML) + (button.classList.contains("liked") ? 1 : -1);
+
+                // TLを即時更新せず、「変更があった」フラグを立てる
+                hasUnappliedActivity = true;
+                checkUpdateRequirement();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+    container.querySelectorAll('.dislike-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const postId = button.getAttribute('post-id');
+            try {
+                await api.toggleReaction("dislike", postId);
+                button.classList.toggle("disliked");
+                button.querySelector("#count").innerHTML = parseInt(button.querySelector("#count").innerHTML) + (button.classList.contains("disliked") ? 1 : -1);
+                // TLを即時更新せず、「変更があった」フラグを立てる
+                hasUnappliedActivity = true;
+                checkUpdateRequirement();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+    // ① loadTimeline 関数の中、低評価ボタンのイベント登録のすぐ下あたりに追加
+    container.querySelectorAll('.follow-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const targetUsername = button.getAttribute('data-username');
+            try {
+                const result = await api.toggleFollow(targetUsername);
+
+                // UIの即時反映 (APIが { following: true/false } を返すと仮定)
+                if (result.following) {
+                    button.classList.add('following');
+                    button.textContent = 'フォロー中';
+                } else {
+                    button.classList.remove('following');
+                    button.textContent = 'フォロー';
+                }
+
+                // TLの再取得を促す
+                hasUnappliedActivity = true;
+                checkUpdateRequirement();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
+    container.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            if (!confirm('本当にこの投稿を削除しますか？')) return;
+
+            const postId = button.getAttribute('post-id');
+            try {
+                await api.deletePost(postId);
+                loadTimeline();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+    });
 }
 
 document.getElementById('content').addEventListener('input', updateCharCountDisplay);
@@ -273,6 +304,7 @@ function updateUIForLoggedInUser(username) {
     document.getElementById("logout-button").style.display = "block"; // ログアウトボタンを表示
     document.getElementById("status-area").style.display = "flex";
     document.getElementById("auth-buttons").style.display = "none";
+    document.getElementById("profile-settings-btn").style.display = "block"; // 追加
 }
 
 // モーダル開閉の制御をシンプル化
@@ -334,3 +366,151 @@ async function applyNewTimeline() {
     // 4. 一番上にスクロール
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ③ ファイルの末尾あたりにプロフィール関連のイベントを追加
+document.getElementById("profile-settings-btn").addEventListener("click", async () => {
+    const username = localStorage.getItem("loggedInUser");
+    if (!username) return;
+
+    try {
+        // 現在のプロフィールを取得してテキストエリアにセット
+        const profile = await api.getProfile(username);
+        document.getElementById("profile-bio-input").value = profile.bio || "";
+        openModal("profile-modal");
+    } catch (error) {
+        alert(error.message);
+    }
+});
+
+document.getElementById("save-profile-btn").addEventListener("click", async () => {
+    const bio = document.getElementById("profile-bio-input").value;
+    const btn = document.getElementById("save-profile-btn");
+
+    try {
+        btn.disabled = true;
+        await api.updateProfile(bio);
+        alert("プロフィールを更新しました");
+        closeModal("profile-modal");
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+// ホームに戻るボタンのイベント
+document.getElementById("back-to-home-btn").addEventListener("click", () => {
+    document.getElementById("profile-view").style.display = "none";
+    document.getElementById("home-view").style.display = "block";
+
+    // ホームに戻った際に最新のTLを取得し直す
+    loadTimeline();
+});
+
+// ユーザー名がクリックされた時の処理（イベントデリゲーションを使用）
+// timeline と user-timeline の両方でクリックを検知するために document 全体に張るか、
+// コンテナに張ります。ここでは全体に張ります。
+document.addEventListener("click", async (e) => {
+    // ユーザー名リンクがクリックされた場合
+    if (e.target.closest('.user-link')) {
+        e.preventDefault(); // 画面上部へのスクロール(href="#")を防ぐ
+        const username = e.target.closest('.user-link').getAttribute('data-username');
+        await openUserProfile(username);
+    }
+});
+
+// プロフィール画面を開いてデータを読み込む関数
+async function openUserProfile(username) {
+    const loggedInUser = localStorage.getItem("loggedInUser");
+
+    // 画面の切り替え
+    document.getElementById("home-view").style.display = "none";
+    document.getElementById("profile-view").style.display = "block";
+
+    const userTimelineContainer = document.getElementById("user-timeline");
+    userTimelineContainer.innerHTML = "<p>読み込み中...</p>";
+
+    try {
+        // 1. プロフィール情報の取得と描画
+        const profile = await api.getProfile(username);
+        document.getElementById("view-profile-username").textContent = `@${profile.username}`;
+        document.getElementById("view-profile-bio").textContent = profile.bio || "自己紹介はありません";
+        document.getElementById("view-profile-stats").textContent = `フォロワー: ${profile.follower_count} | フォロー中: ${profile.following_count}`;
+
+        // フォローボタンの制御
+        const followBtn = document.getElementById("view-profile-follow-btn");
+        if (loggedInUser && loggedInUser !== profile.username) {
+            followBtn.style.display = "block";
+            followBtn.setAttribute("data-username", profile.username);
+            if (profile.is_following) {
+                followBtn.classList.add("following");
+                followBtn.textContent = "フォロー中";
+            } else {
+                followBtn.classList.remove("following");
+                followBtn.textContent = "フォロー";
+            }
+        } else {
+            // 未ログイン、または自分自身の画面の場合はボタンを隠す
+            followBtn.style.display = "none";
+        }
+
+        // 2. ユーザーの投稿一覧の取得と描画
+        const posts = await api.getUserPosts(username);
+        userTimelineContainer.innerHTML = ""; // 読み込み中表示をクリア
+
+        if (posts.length === 0) {
+            userTimelineContainer.innerHTML = "<p>まだ投稿がありません。</p>";
+        } else {
+            posts.forEach(post => {
+                const tweetHTML = ui.createTweetHTML(post);
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = tweetHTML;
+                userTimelineContainer.appendChild(tempDiv.firstElementChild);
+            });
+            // 動的に生成したボタン（いいね等）にイベントを再バインドする
+            bindPostEvents(userTimelineContainer);
+        }
+
+    } catch (error) {
+        userTimelineContainer.innerHTML = `<p style="color: red;">${error.message}</p>`;
+    }
+}
+
+// プロフィール画面のフォローボタンのクリックイベント
+document.getElementById("view-profile-follow-btn").addEventListener("click", async (e) => {
+    const btn = e.target;
+    const targetUsername = btn.getAttribute("data-username");
+    
+    // ボタンを一時的に無効化（連打防止）
+    btn.disabled = true;
+
+    try {
+        // api.js に追加した toggleFollow を呼び出す
+        const result = await api.toggleFollow(targetUsername);
+        
+        // ボタンの見た目を切り替え
+        if (result.following) {
+            btn.classList.add("following");
+            btn.textContent = "フォロー中";
+        } else {
+            btn.classList.remove("following");
+            btn.textContent = "フォロー";
+        }
+
+        // フォロワー数の表示を即座に更新（UX向上）
+        const statsEl = document.getElementById("view-profile-stats");
+        const currentText = statsEl.textContent;
+        // 「フォロワー: X | フォロー中: Y」の数字を強引に書き換える簡易ロジック
+        const match = currentText.match(/フォロワー: (\d+)/);
+        if (match) {
+            let count = parseInt(match[1]);
+            count = result.following ? count + 1 : count - 1;
+            statsEl.textContent = currentText.replace(/フォロワー: \d+/, `フォロワー: ${count}`);
+        }
+
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.disabled = false;
+    }
+});

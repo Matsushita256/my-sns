@@ -135,3 +135,55 @@ export async function logout() {
     });
     return await response.json();
 }
+
+// フォロー・アンフォローのトグル
+export async function toggleFollow(targetUsername) {
+    const response = await fetch(`/api/follow`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_username: targetUsername })
+    });
+    const data = await response.json();
+
+    if (!response.ok)
+        throw new Error(data.error || "フォローの切り替えに失敗しました");
+    
+    return data; // { following: true } などを返す想定
+}
+
+// プロフィール取得
+export async function getProfile(username) {
+    const response = await fetch(`/api/profile?username=${encodeURIComponent(username)}`);
+    const data = await response.json();
+
+    if (!response.ok)
+        throw new Error(data.error || "プロフィールの取得に失敗しました");
+
+    return data;
+}
+
+// プロフィール更新
+export async function updateProfile(bio) {
+    const response = await fetch(`/api/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bio })
+    });
+    const data = await response.json();
+
+    if (!response.ok)
+        throw new Error(data.error || "プロフィールの更新に失敗しました");
+
+    return data;
+}
+
+// 特定ユーザーの投稿を取得
+export async function getUserPosts(username) {
+    const response = await fetch(`/api/user/${encodeURIComponent(username)}`);
+    const data = await response.json();
+
+    if (!response.ok)
+        throw new Error(data.error || "投稿の取得に失敗しました");
+
+    return data;
+}

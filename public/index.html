@@ -120,33 +120,60 @@
                             </div>
                         </div>
                     </div>
+                    <button id="profile-settings-btn" class="btn-outline-sm"
+                        style="display: none; margin-top: 12px;">プロフィールを設定</button>
                 </div>
             </aside>
 
             <!-- 右側：タイムライン -->
             <main class="main-content">
-                <div class="page-title">ホーム</div>
+                <div id="home-view">
+                    <div class="page-title">ホーム</div>
 
-                <!-- 投稿エリア -->
-                <div id="post-area" class="compose-box">
-                    <div class="compose-main">
-                        <div class="avatar small"></div>
-                        <textarea id="content" placeholder="いまどうしてる？" rows="1"></textarea>
+                    <!-- 投稿エリア -->
+                    <div id="post-area" class="compose-box">
+                        <div class="compose-main">
+                            <div class="avatar small"></div>
+                            <textarea id="content" placeholder="いまどうしてる？" rows="1"></textarea>
+                        </div>
+                        <div class="compose-footer">
+                            <span id="char-count" class="char-count">0 / 600</span>
+                            <button id="post-button" class="btn-post" disabled>ポストする</button>
+                        </div>
                     </div>
-                    <div class="compose-footer">
-                        <span id="char-count" class="char-count">0 / 600</span>
-                        <button id="post-button" class="btn-post" disabled>ポストする</button>
+                    <div id="update-banner"
+                        style="display: none; position: sticky; top: 10px; z-index: 100; text-align: center;">
+                        <button id="update-btn"
+                            style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            新しいおすすめを表示
+                        </button>
                     </div>
+                    <div class="timeline-divider"></div>
+                    <div id="timeline"></div>
                 </div>
-                <div id="update-banner"
-                    style="display: none; position: sticky; top: 10px; z-index: 100; text-align: center;">
-                    <button id="update-btn"
-                        style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        新しいおすすめを表示
-                    </button>
+                <!-- ======= ② プロフィール画面 (新規追加・初期は非表示) ======= -->
+                <div id="profile-view" style="display: none;">
+                    <!-- 戻るボタンとプロフィールヘッダー -->
+                    <div class="card profile-header-area">
+                        <button id="back-to-home-btn" class="btn-outline-sm" style="margin-bottom: 16px;">←
+                            ホームに戻る</button>
+
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <h2 id="view-profile-username" style="margin: 0;">@username</h2>
+                                <p id="view-profile-stats"
+                                    style="color: var(--text-muted); font-size: 14px; margin: 4px 0;">フォロワー: 0</p>
+                            </div>
+                            <button id="view-profile-follow-btn" class="follow-btn btn-outline-sm"
+                                style="display: none;">フォロー</button>
+                        </div>
+
+                        <p id="view-profile-bio" style="margin-top: 12px; white-space: pre-wrap;"></p>
+                    </div>
+
+                    <!-- そのユーザーのタイムライン -->
+                    <div id="user-timeline"></div>
                 </div>
-                <div class="timeline-divider"></div>
-                <div id="timeline"></div>
             </main>
         </div>
     </div>
@@ -169,6 +196,20 @@
                 <h3 class="danger-text">危険な操作</h3>
                 <input type="password" id="delete-confirm-password" placeholder="現在のパスワード" class="settings-input">
                 <button id="delete-account-btn" class="btn-danger">アカウントを削除する</button>
+            </div>
+        </div>
+    </dialog>
+    <dialog id="profile-modal" class="modal-base">
+        <div class="modal-header">
+            <h2>プロフィール設定</h2>
+            <button class="close-modal icon-btn">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="settings-section">
+                <h3>自己紹介 (Bio)</h3>
+                <textarea id="profile-bio-input" class="settings-input" rows="4" placeholder="自己紹介を入力してください"
+                    style="resize: vertical;"></textarea>
+                <button id="save-profile-btn" class="btn-primary-sm">保存</button>
             </div>
         </div>
     </dialog>

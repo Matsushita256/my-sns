@@ -3,10 +3,13 @@ import { getRelativeTime, highlightText } from './utils.js';
 export function createTweetHTML(post, searchQuery = "") {
     const relativeTime = getRelativeTime(post.created_at);
     const displayContent = highlightText(post.content, searchQuery);
-    
+
     // アイコンの状態判定
     const heartIcon = post.is_liked ? 'liked' : '';
     const dislikeIcon = post.is_disliked ? 'disliked' : '';
+
+    const followText = post.is_following ? 'フォロー中' : 'フォロー';
+    const followClass = post.is_following ? 'following' : '';
 
     return `
         <div class="tweet">
@@ -14,7 +17,7 @@ export function createTweetHTML(post, searchQuery = "") {
             <div class="tweet-body">
                 <div class="tweet-header">
                     <div>
-                        <span class="username">${post.username}</span>
+                        <strong><a href="#" class="user-link" data-username="${post.username}" style="color: inherit; text-decoration: none;">@${post.username}</a></strong>
                         <span class="timestamp">· ${relativeTime}</span>
                     </div>
                     <!-- 投稿削除ボタン -->
@@ -40,6 +43,15 @@ export function createTweetHTML(post, searchQuery = "") {
                         </svg>
                         <span id="count">${post.dislike_count || 0}</span>
                     </button>
+
+                    <!-- 追加: フォローボタン (自分の投稿でなければ表示) -->
+                    ${!post.is_mine ? `
+                        <button data-username="${post.username}" class="follow-btn btn-outline-sm ${followClass}" style="margin-left: auto; padding: 4px 12px; width: auto; font-size: 12px;">
+                            ${followText}
+                        </button>
+                    ` : ''}
+                <div class="tweet-actions">
+                </div>
                 </div>
             </div>
         </div>

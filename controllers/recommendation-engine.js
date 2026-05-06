@@ -32,25 +32,6 @@ class RecommendationEngine {
     }
 
     /**
-     * 2つのベクトル間のコサイン類似度を計算する
-     * @param {number[]} vecA 
-     * @param {number[]} vecB 
-     * @returns {number} -1.0 ~ 1.0
-     */
-    cosineSimilarity(vecA, vecB) {
-        let dotProduct = 0;
-        let normA = 0;
-        let normB = 0;
-        for (let i = 0; i < vecA.length; i++) {
-            dotProduct += vecA[i] * vecB[i];
-            normA += vecA[i] * vecA[i];
-            normB += vecB[i] * vecB[i];
-        }
-        if (normA === 0 || normB === 0) return 0;
-        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-    }
-
-    /**
      * メイン処理：候補投稿のスコアリングを行う
      * @param {string} currentUserId - 現在のユーザーID
      * @param {Array} candidatePosts - タイムラインに表示する候補投稿の配列
@@ -58,57 +39,11 @@ class RecommendationEngine {
      * @returns {Promise<Array>} スコア順にソートされた投稿配列
      */
     async rankPosts(currentUserId, candidatePosts, db) {
-        const rankedPosts = [];
-        const now = new Date();
-
-        // ユーザーのコンテキスト（履歴）と、今回実装したプロファイル（凝縮された好み）を両方取得
-        const [context, interestProfile] = await Promise.all([
-            this.getUserContext(currentUserId, db),
-            db.getUserInterestProfile(currentUserId)
-        ]);
-
-        for (const post of candidatePosts) {
-            const postAgeHours = (now - new Date(post.created_at)) / (1000 * 60 * 60);
-
-            // 1. インタラクション・スコア
-            const interactionScore = await this.calcInteractionScore(context, post.user_id, db);
-
-            // 2. 協調フィルタリング・スコア
-            const collabScore = await this.calcCollaborativeScore(context, post.user_id, post.id, db);
-
-            // 3. コンテンツ・ベース・スコア（プロファイルがある場合はそれとの類似度を優先）
-            let contentScore = 0;
-            if (interestProfile && post.embedding) {
-                contentScore = this.cosineSimilarity(interestProfile, post.embedding);
-            } else {
-                // プロファイルがない場合は、直近の投稿ベクトル群と比較（前回実装のMax-Pooling）
-                //contentScore = this.calcContentScore(context.recentVectors, post.embedding);
-            }
-
-            // 総合スコアの算出（重み付け）
-            const baseScore =
-                (interactionScore * this.weights.interaction) +
-                (collabScore * this.weights.collaborative) +
-                (Math.max(0, contentScore) * this.weights.content) +
-                1.0; // 基本スコアを底上げして、減衰で0になりすぎないようにする
-
-            const postDecay = this.calculateTimeDecay(postAgeHours, this.halfLife.postAge);
-            const finalScore = baseScore * postDecay;
-
-            rankedPosts.push({ ...post, finalScore });
-        }
-
-        // スコア順にソート
-        return rankedPosts.sort((a, b) => b.finalScore - a.finalScore);
+        return candidatePosts;
     }
 
-    // --- 以下のメソッド群はステップ2で実装します ---
-    // async getUserContext(userId, db) { /* ... */ }
-    // async calcInteractionScore(context, authorId, db) { /* ... */ }
-    // async calcCollaborativeScore(context, authorId, postId, db) { /* ... */ }
-    // calcContentScore(userVectors, postVector) { /* ... */ }
     /**
-     * 【準備】ユーザーの文脈（過去の行動履歴や関心ベクトル）を取得する
+     * ユーザーの文脈（過去の行動履歴や関心ベクトル）を取得する
      */
     async getUserContext(userId, db) {
         // ※実際の実装では、DBから必要な情報を一括または並行（Promise.all）で取得します
@@ -313,7 +248,7 @@ async function migrateMissingEmbeddings(pool) {
 
     for (const post of rows) {
         try {
-            // 前回の generateRealEmbedding を使用
+            // generateRealEmbedding を使用
             const vector = await generateEmbedding(post.content);
             await pool.query(
                 "UPDATE posts SET embedding = $1 WHERE id = $2",
@@ -328,6 +263,7 @@ async function migrateMissingEmbeddings(pool) {
 
 module.exports = {
     RecommendationEngine,
+    FeatureExtractor,
     generateEmbedding,
     migrateMissingEmbeddings // 追加
 };

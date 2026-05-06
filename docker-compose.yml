@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # データベースコンテナ
   db:
-    image: postgres:15
+    image: pgvector/pgvector:pg16
     container_name: sns-db
     environment:
       POSTGRES_USER: myuser
@@ -12,6 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      - ./data:/tmp/data  # ホストの ./data フォルダをコンテナの /tmp/data にマウント
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql # ここを追加
 

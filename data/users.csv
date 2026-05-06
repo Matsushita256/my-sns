@@ -1,0 +1,11 @@
+id,username,email,password_hash,bio
+1,tech_taro,taro@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,AIエンジニア。PythonとLLMの最新動向を追っています。
+2,data_science_ken,ken@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,データサイエンティスト。機械学習とGPUサーバーが好物。
+3,gadget_mani,mani@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,最新ガジェットレビュー。Apple製品と自作PC。
+4,cafe_hanako,hanako@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,週末のカフェ巡りと手作りスイーツの記録。
+5,recipe_yuki,yuki@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,管理栄養士の時短レシピ。美味しいは正義。
+6,sweets_lover,sweets@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,都内のパティスリーを制覇したい甘党。
+7,camp_joji,joji@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,週末は焚き火の前で。ソロキャンプとギア紹介。
+8,mountain_umi,umi@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,日本百名山を制覇中。登山の魅力。
+9,traveler_kenta,kenta@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,バックパッカー。世界一周の旅の記録。
+10,daily_bot,bot@example.com,$2a$10$gEYnI1DoFwMlJhhmOOdkGe/I3nGiDhVGeJJGSNwn7giAMiAoaXg8C,ただの日常のつぶやき。

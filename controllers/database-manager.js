@@ -34,15 +34,16 @@ class ServerDatabaseManager {
     }
 
     async saveUserInterest(userId, vector) {
+        // 配列を '[0.1, 0.2, ...]' という形式の文字列に変換して渡す
+        const vectorString = `[${vector.join(',')}]`;
         const query = `
-        INSERT INTO user_interests (user_id, interest_vector, updated_at)
-        VALUES ($1, $2, CURRENT_TIMESTAMP)
-        ON CONFLICT (user_id) 
-        DO UPDATE SET interest_vector = $2, updated_at = CURRENT_TIMESTAMP
-    `;
-        await pool.query(query, [userId, JSON.stringify(vector)]);
+            INSERT INTO user_interests (user_id, interest_vector)
+            VALUES ($1, $2)
+            ON CONFLICT (user_id) 
+            DO UPDATE SET interest_vector = $2, updated_at = CURRENT_TIMESTAMP
+        `;
+        await pool.query(query, [userId, vectorString]);
     }
-
     async getUserInterestProfile(userId) {
         const query = "SELECT interest_vector FROM user_interests WHERE user_id = $1";
         const result = await pool.query(query, [userId]);

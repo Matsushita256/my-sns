@@ -4,29 +4,21 @@ const pool = require("./config/db");
 const pgSession = require('connect-pg-simple')(session);
 const authRoutes = require("./routes/auth");
 const postRoutes = require("./routes/posts");
-const { migrateMissingEmbeddings } = require("./controllers/recommendation-engine"); // 追加
+// const { migrateMissingEmbeddings, FeatureExtractor } = require("./controllers/recommendation-engine"); // 追加
+const RecommendationService = require('./services/recommendationService');
+const recService = new RecommendationService(pool);
 
 const app = express();
 
 app.use(express.json());
 app.use(express.static("public"));
-// app.use(session({
-//     secret: 'my_secret_key', // 実際には環境変数を使用
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//         httpOnly: true,  // JavaScriptからクッキーを読み取れないようにし、XSS攻撃を防ぐ
-//         secure: false,   // 開発環境。本番環境(HTTPS)では true に設定
-//         sameSite: 'lax', // CSRF攻撃対策
-//         maxAge: 7 * 24 * 60 * 60 * 1000 // クッキーの有効期限（例：7日間）
-//     }
-// }));
+
 // 2. セッション設定の変更
 app.use(session({
     // store に pgSession を指定し、DBプールを渡す
     store: new pgSession({
-        pool : require("./config/db"),                
-        tableName : 'session',   // init.sqlで作ったテーブル名
+        pool: require("./config/db"),
+        tableName: 'session',   // init.sqlで作ったテーブル名
         createTableIfMissing: false // init.sqlで作るのでfalseでOK
     }),
     secret: 'my_secret_key', // 本番環境では環境変数に
@@ -41,12 +33,14 @@ app.use(session({
 app.use("/api", authRoutes);
 app.use("/api", postRoutes);
 
-app.listen(3000, () => {
+app.listen(3000, async () => {
     // --- ここで移行スクリプトを実行 ---
     try {
-        // サーバー起動時にバックグラウンドで実行
-        // await を付けないことで、APIの受付開始を妨げずに裏で処理させます
-        migrateMissingEmbeddings(pool);
+        // 起動時にモデルをロードしてコールドスタートを回避
+        await recService.generateEmbedding("warmup");
+        // 古い投稿の自動移行
+        recService.migrateMissingEmbeddings();
+        recService.migrateMissingBioEmbeddings();
     } catch (err) {
         console.error("Migration failed to start:", err);
     }
