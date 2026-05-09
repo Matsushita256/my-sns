@@ -649,3 +649,129 @@ textarea {
 }
 
 
+/* ==========================================================================
+   プロフィール画面 (Profile View)
+   ========================================================================== */
+
+/* プロフィール画面全体のコンテナ */
+#profile-view {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* プロフィールヘッダーエリア（カード形式） */
+.profile-header-area {
+    padding: 24px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+/* ユーザー名とボタンを横並びにする親要素 */
+.profile-header-top {
+    display: flex;
+    justify-content: space-between; /* 両端に寄せる */
+    align-items: center;           /* 上下中央揃え */
+    gap: 16px;                     /* 要素間の最低限の隙間を確保（これが重要！） */
+    width: 100%;
+}
+
+/* 戻るボタン */
+#back-to-home-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    color: var(--text-sub);
+    border-color: var(--border);
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+#back-to-home-btn:hover {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    border-color: var(--text-sub);
+}
+
+/* ユーザー名とステータス */
+#view-profile-username {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+#view-profile-stats {
+    font-size: 14px;
+    color: var(--text-sub);
+    display: flex;
+    gap: 16px;
+}
+
+/* 自己紹介 (Bio) */
+#view-profile-bio {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-main);
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    white-space: pre-wrap; /* 改行を反映 */
+    word-wrap: break-word;
+}
+
+/* フォローボタンの基本スタイル（共通） */
+.follow-btn {
+    font-weight: 600;
+    border-radius: 20px; /* 丸みのあるデザイン */
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--primary);
+    background-color: transparent;
+    color: var(--primary);
+    padding: 6px 16px;
+}
+
+.follow-btn:hover {
+    background-color: rgba(99, 102, 241, 0.1); /* 薄いインディゴ */
+}
+
+/* 「フォロー中」の状態 */
+.follow-btn.following {
+    background-color: var(--text-main);
+    color: #ffffff;
+    border-color: var(--text-main);
+}
+
+.follow-btn.following:hover {
+    background-color: #ef4444; /* 解除を促す赤 */
+    border-color: #ef4444;
+    content: "解除"; /* JSで文字を変えるのが確実ですが、CSSでも補助可能 */
+}
+
+/* タイムライン上のユーザーリンク */
+.user-link {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--text-main);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.user-link:hover {
+    color: var(--primary);
+    text-decoration: underline !important;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 画面切り替え時のスムーズな表示 */
+#home-view, #profile-view {
+    transition: opacity 0.3s ease;
+}

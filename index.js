@@ -41,6 +41,7 @@ app.listen(3000, async () => {
         // 古い投稿の自動移行
         recService.migrateMissingEmbeddings();
         recService.migrateMissingBioEmbeddings();
+        recService.initializeMissingInterestVectors();
     } catch (err) {
         console.error("Migration failed to start:", err);
     }

@@ -1,8 +1,12 @@
 docker exec -it sns-db psql -U myuser -d sns_db
 
-\copy users(id, username, email, password_hash, bio) FROM './tmp/data/users.csv' WITH CSV HEADER;
-\copy posts(id, user_id, content, created_at) FROM './tmp/data/posts.csv' WITH CSV HEADER;
-\copy likes(user_id, post_id) FROM './tmp/data/likes.csv' WITH CSV HEADER;
-\copy follows(follower_id, following_id) FROM './tmp/data/follows.csv' WITH CSV HEADER;
+\copy users(username, email, password_hash, bio) FROM './tmp/data/users_v2.csv' WITH CSV HEADER;
+\copy posts(user_id, content, created_at) FROM './tmp/data/posts.csv' WITH CSV HEADER;
+\copy likes(user_id, post_id, created_at) FROM './tmp/data/likes.csv' WITH CSV HEADER;
+\copy dislikes(user_id, post_id, created_at) FROM './tmp/data/dislikes.csv' WITH CSV HEADER;
+\copy follows(follower_id, following_id, created_at) FROM './tmp/data/follows.csv' WITH CSV HEADER;
 
 SELECT SETVAL('posts_id_seq', (SELECT MAX(id) FROM posts));
+SELECT SETVAL('users_id_seq', (SELECT MAX(id) FROM users));
+SELECT SETVAL('likes_id_seq', (SELECT MAX(id) FROM likes));
+SELECT SETVAL('dislikes_id_seq', (SELECT MAX(id) FROM dislikes));

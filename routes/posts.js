@@ -261,7 +261,7 @@ router.get("/user/:username", async (req, res) => {
 
     try {
         const query = `
-            SELECT p.*, u.username,
+            SELECT p.id, p.content, p.created_at, p.user_id, u.username,
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS like_count,
                 (SELECT COUNT(*) FROM dislikes WHERE post_id = p.id) AS dislike_count,
                 EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) AS is_liked,

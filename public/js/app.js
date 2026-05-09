@@ -34,6 +34,7 @@ async function loadTimeline(query = "") {
         lastLoadTime = Date.now(); // 読み込み時刻を更新
         const container = document.getElementById('timeline');
         container.innerHTML = posts.map(p => ui.createTweetHTML(p, query)).join('');
+        console.log(JSON.stringify(posts, null, 2));
         // 描画した後にボタンを探してイベントを登録する
         bindPostEvents(container);
 
