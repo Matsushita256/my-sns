@@ -10,10 +10,13 @@ const recService = new RecommendationService(pool);
 
 router.get("/get", async (req, res) => {
     const userId = req.session.userId;  // ログインしてなければ undefined
-    const { q } = req.query;
+    const { q: searchQuery } = req.query;
 
     try {
-        const posts = await recService.getRecommendedTimeline(userId);
+        const searchTerms = searchQuery 
+            ? searchQuery.trim().split(/\s+/).map(t => `%${t}%`) 
+            : null;
+        const posts = await recService.getRecommendedTimeline(userId, null, searchTerms);
         res.json(posts);
     } catch (err) {
         console.error("Timeline error:", err);

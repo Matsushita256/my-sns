@@ -1,3 +1,4 @@
+// import { search } from '../../routes/posts.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
 
@@ -84,14 +85,19 @@ function bindPostEvents(container) {
             try {
                 const result = await api.toggleFollow(targetUsername);
 
-                // UIの即時反映 (APIが { following: true/false } を返すと仮定)
-                if (result.following) {
-                    button.classList.add('following');
-                    button.textContent = 'フォロー中';
-                } else {
-                    button.classList.remove('following');
-                    button.textContent = 'フォロー';
-                }
+                container.querySelectorAll(".follow-btn").forEach(button => {
+                    if (button.getAttribute("data-username") != targetUsername)
+                        return;
+
+                    // UIの即時反映 (APIが { following: true/false } を返すと仮定)
+                    if (result.following) {
+                        button.classList.add('following');
+                        button.textContent = 'フォロー中';
+                    } else {
+                        button.classList.remove('following');
+                        button.textContent = 'フォロー';
+                    }
+                });
 
                 // TLの再取得を促す
                 hasUnappliedActivity = true;
@@ -114,14 +120,35 @@ function bindPostEvents(container) {
             }
         });
     });
+    container.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            // ハイライト用のタグを除いた純粋なテキストを取得
+            const tweetContent = btn.closest('.tweet-body').querySelector('.tweet-content').innerText;
+            
+            try {
+                await navigator.clipboard.writeText(tweetContent);
+                
+                // フィードバック演出
+                const icon = btn.querySelector('.copy-icon');
+                const originalColor = icon.style.color;
+                icon.style.color = '#10b981'; // 成功時：緑色
+                
+                setTimeout(() => {
+                    icon.style.color = originalColor;
+                }, 1000);
+            } catch (err) {
+                console.error('コピーに失敗しました', err);
+            }
+        });
+    });
 }
 
-document.getElementById('content').addEventListener('input', updateCharCountDisplay);
+document.getElementById('content').addEventListener('input', updatePostCharCountDisplay);
 
 // 文字数カウントの更新処理
-function updateCharCountDisplay() {
+function updatePostCharCountDisplay() {
     const textarea = document.getElementById('content');
-    const charCount = document.getElementById('char-count');
+    const charCount = document.getElementById('post-char-count');
     const postButton = document.getElementById('post-button');
 
     const length = textarea.value.length;
@@ -146,10 +173,31 @@ function updateCharCountDisplay() {
     textarea.style.height = textarea.scrollHeight + 'px';
 }
 
+document.getElementById("profile-bio-input").addEventListener("input", updateBioCharCountDisplay);
+
+function updateBioCharCountDisplay() {
+    const textarea = document.getElementById("profile-bio-input");
+    const charCount = document.getElementById("bio-char-count");
+
+    const length = textarea.value.length;
+    const maxLength = 160;
+
+    // 表示を「現在文字数 / 最大文字数」に更新
+    charCount.textContent = `${length} / ${maxLength}`;
+
+    // 最大文字数を超えた時の警告表示
+    charCount.classList.remove("warning");
+    charCount.classList.remove("danger");
+    if (length > maxLength) {
+        charCount.classList.add('danger');
+    } else if (length >= maxLength * 0.9) {
+        charCount.classList.add('warning');
+    }
+}
+
 // ポスト処理
 document.getElementById("post-button").addEventListener("click", async () => {
     const contentElement = document.getElementById("content");
-    const charCountText = document.getElementById("char-count");
     const content = contentElement.value;
     const postBtn = document.getElementById('post-button');
 
@@ -161,8 +209,7 @@ document.getElementById("post-button").addEventListener("click", async () => {
 
         contentElement.value = "";
         contentElement.style.height = 'auto'; // 高さをリセット
-        charCountText.textContent = '0 / 600';
-        updateCharCountDisplay();
+        updatePostCharCountDisplay();
         loadTimeline();
     } catch (error) {
         alert(error.message);
@@ -171,8 +218,7 @@ document.getElementById("post-button").addEventListener("click", async () => {
     }
 });
 
-// 検索処理
-document.getElementById("search-button").addEventListener("click", async () => {
+async function search() {
     try {
         const searchInput = document.getElementById("search-input");
         const query = searchInput.value;
@@ -180,6 +226,13 @@ document.getElementById("search-button").addEventListener("click", async () => {
     } catch (error) {
         alert(error.message);
     }
+}
+
+// 検索処理
+document.getElementById("search-button").addEventListener("click", () => search());
+document.getElementById('search-bar').addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await search();
 });
 
 // アカウント削除処理
@@ -306,6 +359,11 @@ function updateUIForLoggedInUser(username) {
     document.getElementById("status-area").style.display = "flex";
     document.getElementById("auth-buttons").style.display = "none";
     document.getElementById("profile-settings-btn").style.display = "block"; // 追加
+    // プロフィールボタンを表示
+    const navProfile = document.getElementById("nav-profile-btn");
+    if (navProfile) {
+        navProfile.style.display = "block";
+    }
 }
 
 // モーダル開閉の制御をシンプル化
@@ -368,7 +426,7 @@ async function applyNewTimeline() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ③ ファイルの末尾あたりにプロフィール関連のイベントを追加
+// ③ プロフィール設定ボタン
 document.getElementById("profile-settings-btn").addEventListener("click", async () => {
     const username = localStorage.getItem("loggedInUser");
     if (!username) return;
@@ -377,7 +435,9 @@ document.getElementById("profile-settings-btn").addEventListener("click", async 
         // 現在のプロフィールを取得してテキストエリアにセット
         const profile = await api.getProfile(username);
         document.getElementById("profile-bio-input").value = profile.bio || "";
+        
         openModal("profile-modal");
+        updateBioCharCountDisplay();
     } catch (error) {
         alert(error.message);
     }
@@ -390,7 +450,9 @@ document.getElementById("save-profile-btn").addEventListener("click", async () =
     try {
         btn.disabled = true;
         await api.updateProfile(bio);
+        updateBioCharCountDisplay();
         alert("プロフィールを更新しました");
+        checkUpdateRequirement();
         closeModal("profile-modal");
     } catch (error) {
         alert(error.message);
@@ -462,12 +524,15 @@ async function openUserProfile(username) {
         if (posts.length === 0) {
             userTimelineContainer.innerHTML = "<p>まだ投稿がありません。</p>";
         } else {
-            posts.forEach(post => {
-                const tweetHTML = ui.createTweetHTML(post);
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = tweetHTML;
-                userTimelineContainer.appendChild(tempDiv.firstElementChild);
-            });
+            userTimelineContainer.innerHTML = posts.map(post => ui.createTweetHTML(post)).join("");
+            userTimelineContainer.querySelectorAll(".follow-btn").forEach(e => e.remove());
+
+            // posts.forEach(post => {
+            //     const tweetHTML = ui.createTweetHTML(post);
+            //     const tempDiv = document.createElement("div");
+            //     tempDiv.innerHTML = tweetHTML;
+            //     userTimelineContainer.appendChild(tempDiv.firstElementChild);
+            // });
             // 動的に生成したボタン（いいね等）にイベントを再バインドする
             bindPostEvents(userTimelineContainer);
         }
@@ -481,14 +546,14 @@ async function openUserProfile(username) {
 document.getElementById("view-profile-follow-btn").addEventListener("click", async (e) => {
     const btn = e.target;
     const targetUsername = btn.getAttribute("data-username");
-    
+
     // ボタンを一時的に無効化（連打防止）
     btn.disabled = true;
 
     try {
         // api.js に追加した toggleFollow を呼び出す
         const result = await api.toggleFollow(targetUsername);
-        
+
         // ボタンの見た目を切り替え
         if (result.following) {
             btn.classList.add("following");
@@ -513,5 +578,16 @@ document.getElementById("view-profile-follow-btn").addEventListener("click", asy
         alert(error.message);
     } finally {
         btn.disabled = false;
+    }
+});
+
+// ページ下部などのイベント登録箇所に追加
+document.getElementById("nav-profile-btn").addEventListener("click", () => {
+    const currentLoggedInUser = localStorage.getItem("loggedInUser");
+
+    if (currentLoggedInUser) {
+        // 既存のプロフィール表示ロジック（openUserProfile等）を呼び出す
+        // 以下の関数名はコード内での実際の名前に合わせて調整してください
+        openUserProfile(currentLoggedInUser);
     }
 });

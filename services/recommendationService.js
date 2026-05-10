@@ -112,7 +112,7 @@ class RecommendationService {
         }
     }
 
-    async getRecommendedTimeline(userId = null, limit = 200) {
+    async getRecommendedTimeline(userId = null, limit = 200, searchWords = null) {
         if (userId) {
             // ユーザーの興味ベクトルとBioベクトルを両方取得
             const { rows: userRow } = await this.pool.query(
@@ -124,32 +124,32 @@ class RecommendationService {
             let interestVector = userRow[0]?.interest_vector || null;
             const bioVector = userRow[0]?.bio_vector || null;
 
-            // interest_vectorがない場合、生成を試みる
-            if (!interestVector) {
-                // 過去の行動（いいね等）からプロファイルを計算
-                await this.updateInterestProfile(userId);
+            // // interest_vectorがない場合、生成を試みる
+            // if (!interestVector) {
+            //     // 過去の行動（いいね等）からプロファイルを計算
+            //     await this.updateInterestProfile(userId);
 
-                // 再度DBから取得
-                const { rows: retryRow } = await this.pool.query(
-                    "SELECT interest_vector FROM user_interests WHERE user_id = $1",
-                    [userId]
-                );
-                interestVector = retryRow[0]?.interest_vector || null;
-            }
+            //     // 再度DBから取得
+            //     const { rows: retryRow } = await this.pool.query(
+            //         "SELECT interest_vector FROM user_interests WHERE user_id = $1",
+            //         [userId]
+            //     );
+            //     interestVector = retryRow[0]?.interest_vector || null;
+            // }
 
             // interestVector または bioVector のいずれかがあればパーソナライズ版を返す
             if (interestVector || bioVector) {
-                return this._getPersonalizedTimeline(userId, interestVector, bioVector, limit);
+                return this._getPersonalizedTimeline(userId, interestVector, bioVector, limit, searchWords);
             }
         }
 
         // ゲスト用ロジック
-        return this._getGuestTimeline(limit);
+        return this._getGuestTimeline(limit, searchWords);
     }
 
     // --- 2. 未ログイン（ゲスト）ユーザー向けロジック ---
     // 「(いいね数 - 低評価数) / 経過時間のべき乗」でスコアリング（Hacker NewsやRedditに近い方式）
-    async _getGuestTimeline(limit) {
+    async _getGuestTimeline(limit, searchWords) {
         const query = `
             -- ゲスト用タイムライン：個人データがないため「全体の人気度」と「鮮度」のみでスコアリング
             WITH scores AS (
@@ -163,6 +163,7 @@ class RecommendationService {
                     -- いいね数から低評価(重め)を引いた値の対数を取る。
                     (LOG(GREATEST((SELECT COUNT(*) FROM likes WHERE post_id = p.id) - (SELECT COUNT(*) FROM dislikes WHERE post_id = p.id) * 2.0, 1.0)) * 0.2) AS popularity_score
                 FROM posts p
+                WHERE ($2::text[] IS NULL OR p.content ILIKE ALL($2::text[]))
             )
             -- メインクエリ
             SELECT 
@@ -196,12 +197,12 @@ class RecommendationService {
             ORDER BY total_score DESC
             LIMIT $1;
         `;
-        const { rows } = await this.pool.query(query, [limit]);
+        const { rows } = await this.pool.query(query, [limit, searchWords]);
         return rows;
     }
 
-    // --- 【修正】スコア計算式にフォローとBioを組み込む ---
-    async _getPersonalizedTimeline(userId, interestVector, bioVector, limit) {
+    // --- スコア計算式にフォローとBioを組み込む ---
+    async _getPersonalizedTimeline(userId, interestVector, bioVector, limit, searchWords) {
         const query = `
             -- 1. 各要素のスコアを個別に計算
             WITH scores AS (
@@ -213,7 +214,7 @@ class RecommendationService {
                     LIMIT 10
                 ),
                 
-                -- 【改善ポイント1】類似ユーザー10人が「いいね」した各投稿のカウントを予め集計
+                -- 類似ユーザー10人が「いいね」した各投稿のカウントを予め集計
                 collaborative_likes AS (
                     SELECT l.post_id, COUNT(*) * 1.0 AS collab_count
                     FROM likes l
@@ -221,8 +222,8 @@ class RecommendationService {
                     GROUP BY l.post_id
                 ),
 
-                -- 【改善ポイント2】ログインユーザー($1)が各投稿者に対して行った「いいね」「低評価」の合計を予め計算
-                -- （postsテーブル全体をスキャンさせないため、直接アクション履歴から逆引きして集計しています）
+                -- ログインユーザー($1)が各投稿者に対して行った「いいね」「低評価」の合計を予め計算
+                -- （postsテーブル全体をスキャンさせないため、直接アクション履歴から逆引きして集計）
                 user_interactions AS (
                     SELECT 
                         author_id,
@@ -278,6 +279,7 @@ class RecommendationService {
                 FROM posts p
                 LEFT JOIN user_interactions ui ON p.user_id = ui.author_id
                 LEFT JOIN collaborative_likes cl ON p.id = cl.post_id
+                WHERE ($5::text[] IS NULL OR p.content ILIKE ALL($5::text[]))
             )
             -- 2. メインのクエリで最終的な合計スコアを算出
             SELECT 
@@ -310,7 +312,7 @@ class RecommendationService {
             ORDER BY total_score DESC
             LIMIT $4;
         `;
-        const { rows } = await this.pool.query(query, [userId, interestVector, bioVector, limit]);
+        const { rows } = await this.pool.query(query, [userId, interestVector, bioVector, limit, searchWords]);
         return rows;
     }
 
@@ -325,7 +327,7 @@ class RecommendationService {
         }
     }
 
-    // --- 【新規】未処理のbioをベクトル化する初期化処理 ---
+    // --- 未処理のbioをベクトル化する初期化処理 ---
     async migrateMissingBioEmbeddings() {
         // bioが入力されているのに、bio_embeddingが空のユーザーを取得
         const { rows } = await this.pool.query(
@@ -343,38 +345,18 @@ class RecommendationService {
     }
 
     async initializeMissingInterestVectors() {
-        console.log('[Init] 未設定の user_interest ベクトルを確認中...');
-
-        try {
-            // 1. interest_vector が NULL のユーザーとプロフィールを取得
-            const { rows: missingUsers } = await this.pool.query(`
-                SELECT u.id AS user_id
-                FROM users u
-                LEFT JOIN user_interests ui ON u.id = ui.user_id
-                WHERE ui.interest_vector IS NULL
+        // 1. interest_vector が NULL のユーザーとプロフィールを取得
+        const { rows } = await this.pool.query(`
+            SELECT u.id AS user_id
+            FROM users u
+            LEFT JOIN user_interests ui ON u.id = ui.user_id
+            WHERE ui.interest_vector IS NULL
         `);
-
-            if (missingUsers.length === 0) {
-                console.log('[Init] すべてのユーザーにベクトルが設定されています。');
-                return;
-            }
-
-            console.log(`[Init] ${missingUsers.length} 件の未設定ベクトルを発見。生成を開始します...`);
-
-            // 2. 各ユーザーのベクトルを生成してアップデート
-            for (const user of missingUsers) {
-                try {
-                    this.updateInterestProfile(user.user_id);
-                } catch (userError) {
-                    console.error(`  ユーザーID: ${user.user_id} のベクトル生成に失敗しました:`, userError.message);
-                    // 1人の失敗で全体を止めないよう、次のユーザーへ進む
-                }
-            }
-
-            console.log('[Init] ベクトルの補完処理が完了しました。');
-        } catch (error) {
-            console.error('[Init] ベクトル補完処理中にエラーが発生しました:', error);
+        for (const user of rows) {
+            this.updateInterestProfile(user.user_id);
         }
+
+        console.log(`Missing interest vector initialization complete for ${rows.length}`);
     }
 }
 

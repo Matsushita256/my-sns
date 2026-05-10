@@ -44,6 +44,14 @@ export function createTweetHTML(post, searchQuery = "") {
                         <span id="count">${post.dislike_count || 0}</span>
                     </button>
 
+                    <!-- コピーボタン -->
+                    <button class="copy-btn" title="テキストをコピー">
+                        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+
                     <!-- 追加: フォローボタン (自分の投稿でなければ表示) -->
                     ${!post.is_mine ? `
                         <button data-username="${post.username}" class="follow-btn btn-outline-sm ${followClass}" style="margin-left: auto; padding: 4px 12px; width: auto; font-size: 12px;">

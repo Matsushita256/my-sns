@@ -61,7 +61,7 @@ body {
    汎用的な要素
    ========================================================================== */
 
-.icon-btn {
+/* .icon-btn {
     background: none;
     border: none;
     color: var(--text-sub);
@@ -76,6 +76,28 @@ body {
 
 .icon-btn:hover {
     background-color: var(--border);
+    color: var(--text-main);
+} */
+ /* モーダルの閉じボタンなどのアイコンボタンを正円にする */
+.icon-btn {
+    width: 36px;           /* 幅と高さを同じ値に固定する */
+    height: 36px;
+    border-radius: 50%;    /* 50%にすることで正円になる */
+    display: flex;          /* 中の「×」を中央に配置するため */
+    align-items: center;
+    justify-content: center;
+    padding: 0;            /* パディングがあると楕円になるので 0 にする */
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;       /* 「×」の大きさ */
+    color: var(--text-sub);
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* ホバーした時に円形の背景が表示されるようにする */
+.icon-btn:hover {
+    background-color: var(--border); /* または rgba(0, 0, 0, 0.1) など */
     color: var(--text-main);
 }
 
@@ -177,6 +199,39 @@ body {
     background: rgba(29, 155, 240, 0.1);
 }
 
+.profile-info {
+    margin-top: 24px;   /* 12px から 24px に増やしてゆとりを持たせる */
+}
+
+/* サイドバー内の認証ボタン群の下にマージンを追加 */
+#auth-buttons {
+    margin-bottom: 24px;
+}
+
+.nav-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: left;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: background-color 0.2s;
+    margin-top: 4px;
+}
+
+.nav-btn:hover {
+    background-color: var(--border);
+}
+
+/* アクティブ（選択中）のような見た目にしたい場合のスタイル */
+.nav-btn:active {
+    background-color: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+}
 
 /* ==========================================================================
    投稿フォーム
@@ -479,6 +534,27 @@ textarea {
     background-color: rgba(239, 68, 68, 0.1); /* ほんのり赤い背景 */
 }
 
+/* style.css に追加 */
+.copy-btn {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    transition: all 0.2s;
+}
+
+.copy-btn:hover {
+    color: var(--primary);
+}
+
+.copy-icon {
+    width: 18px;
+    height: 18px;
+}
+
 /* ==========================================================================
    モーダル関係
    ========================================================================== */
@@ -530,20 +606,32 @@ textarea {
 
 .modal-body {
     padding: 24px;
+    padding-top: 10px;
 }
 
 /* ==========================================================================
    設定画面
    ========================================================================== */
 
+/* 外側のコンテナ：中身を縦に並べる */
 .settings-section {
-    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column; /* 子要素を縦に並べる */
+    gap: 12px;              /* 各要素（ヘッダー、textarea、ボタン）の間の余白 */
+    align-items: flex-start; /* 中身を左寄せにする */
 }
 
-.settings-section h3 {
+/* ヘッダー：ここだけ横に広げて「タイトル」と「カウンター」を左右に分ける */
+.settings-section-header {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    width: 100%;            /* 横幅いっぱいに広げることで、左右の振り分けを成立させる */
+}
+
+.settings-section-header h3 {
+    margin: 0;              /* 余計なマージンをカット */
     font-size: 16px;
-    margin-bottom: 12px;
-    color: var(--text-main);
 }
 
 .settings-input {
@@ -675,6 +763,21 @@ textarea {
     align-items: center;           /* 上下中央揃え */
     gap: 16px;                     /* 要素間の最低限の隙間を確保（これが重要！） */
     width: 100%;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center; /* 垂直方向の中央揃え */
+    gap: 16px;
+    margin-bottom: 20px;
+    width: 100%;        /* 親の幅いっぱいに広げる */
+}
+
+#view-profile-follow-btn {
+    margin-left: auto;  /* これで右端に寄ります */
+    width: fit-content; /* 中の文字に合わせて幅を決定し、伸びるのを防ぐ */
+    white-space: nowrap;/* 改行を防ぐ */
+    padding: 8px 20px;  /* 横幅が短くなりすぎないよう調整 */
 }
 
 /* 戻るボタン */
